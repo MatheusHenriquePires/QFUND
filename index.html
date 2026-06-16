@@ -48,13 +48,19 @@
             <div class="p-5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Menu
             </div>
-           
+                
                 <li>
-                    <a href="#" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-50 text-blue-600 font-medium transition-colors border-l-4 border-blue-600">
+                    <a href="#atividadeForm" id="menuGerar" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-50 text-blue-600 font-medium transition-colors border-l-4 border-blue-600">
                         <i class="fas fa-file-alt w-5 text-center"></i> Gerar Atividades
                     </a>
                 </li>
-               
+
+                <li>
+                    <a href="history.html" id="menuHistorico" class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                        <i class="fas fa-history w-5 text-center"></i> Histórico
+                    </a>
+                </li>
+
             </ul>
         </aside>
 
@@ -78,6 +84,20 @@
                                 <select id="disciplina" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                                     <option value="">Carregando...</option>
                                 </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de usuário</label>
+                                <select id="tipo_usuario" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                                    <option value="">Selecione...</option>
+                                    <option value="professor">Professor</option>
+                                    <option value="usuario">Usuário</option>
+                                </select>
+                            </div>
+
+                            <div id="professorField" class="form-group hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Professor responsável</label>
+                                <input type="text" id="professor" placeholder="Nome do professor" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                             </div>
 
                             <div class="form-group">
@@ -123,9 +143,11 @@
                         </div>
 
                         <div class="pt-6 border-t border-gray-100 mt-6 flex flex-col items-end">
-                            <button type="submit" class="w-full md:w-auto md:min-w-[220px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 px-6 rounded-lg shadow-sm transition-colors flex justify-center items-center gap-2 text-[15px]">
-                                <i class="fas fa-file-pdf"></i> GERAR PDF
-                            </button>
+                            <div class="flex gap-3">
+                                <button type="submit" class="w-full md:w-auto md:min-w-[220px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 px-6 rounded-lg shadow-sm transition-colors flex justify-center items-center gap-2 text-[15px]">
+                                    <i class="fas fa-file-pdf"></i> GERAR PDF
+                                </button>
+                            </div>
                         </div>
 
                         <div id="status" class="hidden mt-4 text-center text-sm font-semibold rounded-lg p-3"></div>
@@ -137,7 +159,10 @@
     </div>
 
     <script>
-        const API = "http://127.0.0.1:8001";
+        const API = "http://127.0.0.1:8000";
+
+        const CACHE_KEY = 'disciplinas_cache';
+        const CACHE_TTL = 1000 * 60 * 60; // 1 hora em ms
 
         const disciplinaSelect = document.getElementById("disciplina");
         const conteudosSelect = document.getElementById("conteudos");
@@ -157,24 +182,44 @@
 
         async function carregarDisciplinas() {
             try {
+                // tenta cache local primeiro
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Date.now() - parsed.ts < CACHE_TTL) {
+                        preencherDisciplinas(parsed.data);
+                        return;
+                    }
+                }
+
                 const response = await fetch(`${API}/disciplinas`);
                 const data = await response.json();
 
-                disciplinaSelect.innerHTML = '<option value="">Selecione...</option>';
-
                 const disciplinas = data.data || data;
 
-                disciplinas.forEach(disciplina => {
-                    disciplinaSelect.innerHTML += `
-                        <option value="${disciplina.id}">
-                            ${disciplina.name}
-                        </option>
-                    `;
-                });
+                // salvar no cache local
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: disciplinas }));
+                } catch (e) {
+                    // falha no storage não é crítico
+                }
+
+                preencherDisciplinas(disciplinas);
             } catch (erro) {
                 console.error(erro);
                 setStatus('<i class="fas fa-exclamation-circle"></i> Erro ao carregar disciplinas.', 'error');
             }
+        }
+
+        function preencherDisciplinas(disciplinas) {
+            disciplinaSelect.innerHTML = '<option value="">Selecione...</option>';
+            disciplinas.forEach(disciplina => {
+                disciplinaSelect.innerHTML += `
+                    <option value="${disciplina.id}">
+                        ${disciplina.name}
+                    </option>
+                `;
+            });
         }
 
         async function carregarConteudos(disciplinaId) {
@@ -217,6 +262,12 @@
                     incluir_gabarito: document.getElementById("gabarito").checked,
                     titulo: document.getElementById("titulo").value
                 };
+                // incluir tipo de usuário e professor responsável se aplicável
+                const tipoVal = (document.getElementById("tipo_usuario").value) || null;
+                if (tipoVal) body.tipo_usuario = tipoVal;
+                if (tipoVal === 'professor') {
+                    body.professor = document.getElementById('professor').value || null;
+                }
 
                 const response = await fetch(`${API}/gerar-atividade`, {
                     method: "POST",
@@ -251,7 +302,71 @@
             }
         });
 
-        carregarDisciplinas();
+        // carregar/salvar perfil do usuário e mostrar/ocultar campo professor
+        const tipoSelect = document.getElementById('tipo_usuario');
+        const professorField = document.getElementById('professorField');
+        const professorInput = document.getElementById('professor');
+
+        async function saveProfile() {
+            const tipo = tipoSelect ? (tipoSelect.value || null) : null;
+            const nome = (tipo === 'professor' && professorInput) ? (professorInput.value || null) : null;
+            const disciplina_preferida = disciplinaSelect.value || null;
+            const profile = { tipo: tipo || 'usuario', nome, disciplina_preferida };
+            try {
+                await fetch(`${API}/usuario`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(profile)
+                });
+            } catch (e) {
+                console.error('Erro salvando perfil', e);
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                const res = await fetch(`${API}/usuario`);
+                if (!res.ok) return;
+                const profile = await res.json();
+                if (!profile) return;
+
+                if (profile.tipo && tipoSelect) tipoSelect.value = profile.tipo;
+                if (profile.tipo === 'professor') {
+                    if (professorInput) {
+                        professorInput.value = profile.nome || '';
+                        professorField.classList.remove('hidden');
+                    }
+                } else {
+                    if (professorInput) professorInput.value = '';
+                    if (professorField) professorField.classList.add('hidden');
+                }
+
+                if (profile.disciplina_preferida && disciplinaSelect) {
+                    disciplinaSelect.value = profile.disciplina_preferida;
+                    await carregarConteudos(profile.disciplina_preferida);
+                }
+            } catch (e) {
+                console.error('Erro carregando perfil', e);
+            }
+        }
+
+        if (tipoSelect) {
+            tipoSelect.addEventListener('change', async (e) => {
+                if (e.target.value === 'professor') {
+                    professorField.classList.remove('hidden');
+                } else {
+                    professorField.classList.add('hidden');
+                    if (professorInput) professorInput.value = '';
+                }
+                await saveProfile();
+            });
+        }
+
+        if (professorInput) {
+            professorInput.addEventListener('blur', saveProfile);
+        }
+
+        carregarDisciplinas().then(() => loadProfile()).catch(() => {});
     </script>
 </body>
 </html>

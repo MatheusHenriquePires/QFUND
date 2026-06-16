@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Histórico - QFund</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* keep scrollbar styles consistent */
+        select[multiple]::-webkit-scrollbar { width: 8px; }
+        select[multiple]::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        select[multiple]::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-[#0052cc] text-white h-16 flex items-center justify-between px-6 shadow-md z-20 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="text-2xl font-bold tracking-wide flex items-center gap-2">
+                <i class="fas fa-layer-group"></i> QFund
+            </div>
+        </div>
+        <div class="flex items-center gap-3 bg-white/10 px-4 py-1.5 rounded-full border border-white/20 cursor-pointer hover:bg-white/20 transition-colors">
+            <div class="w-8 h-8 rounded-full bg-white text-[#0052cc] flex items-center justify-center font-bold text-sm shadow-sm">
+                M
+            </div>
+            <span class="text-sm font-medium">Matheus</span>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="w-64 bg-white border-r border-gray-200 md:flex flex-col shrink-0 overflow-y-auto shadow-[4px_0_10px_rgba(0,0,0,0.02)]">
+            <div class="p-5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu</div>
+            <li>
+                <a href="index.html" class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                    <i class="fas fa-file-alt w-5 text-center"></i> Gerar Atividades
+                </a>
+            </li>
+            <li>
+                <a href="history.html" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-50 text-blue-600 font-medium transition-colors border-l-4 border-blue-600">
+                    <i class="fas fa-history w-5 text-center"></i> Histórico
+                </a>
+            </li>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-2xl font-bold mb-4">Histórico de Gerações</h1>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Tipo</label>
+                        <select id="tipoFiltro" class="w-full border rounded px-3 py-2">
+                            <option value="">Selecione...</option>
+                            <option value="professor">Professor</option>
+                            <option value="usuario">Usuário</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Professor (opcional)</label>
+                        <input id="profFiltro" class="w-full border rounded px-3 py-2" placeholder="Nome do professor" />
+                    </div>
+                    <div class="flex items-end">
+                        <button id="btnBuscar" class="bg-emerald-500 text-white px-4 py-2 rounded font-semibold">Buscar</button>
+                    </div>
+                </div>
+
+                <div id="status" class="hidden mb-4 p-3 rounded"></div>
+                <div id="resultados" class="space-y-4"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API = "http://127.0.0.1:8000";
+        const btnBuscar = document.getElementById('btnBuscar');
+        const statusDiv = document.getElementById('status');
+        const resultadosDiv = document.getElementById('resultados');
+        const tipoFiltro = document.getElementById('tipoFiltro');
+        const profFiltro = document.getElementById('profFiltro');
+
+        async function loadProfile() {
+            try {
+                const res = await fetch(`${API}/usuario`);
+                if (!res.ok) return;
+                const profile = await res.json();
+                if (!profile) return;
+                if (profile.tipo && tipoFiltro) tipoFiltro.value = profile.tipo;
+                if (profile.nome && profile.tipo === 'professor' && profFiltro) profFiltro.value = profile.nome;
+            } catch (e) {
+                console.error('Erro carregando perfil', e);
+            }
+        }
+
+        function setStatus(msg, tipo) {
+            statusDiv.classList.remove('hidden', 'bg-blue-50','text-blue-700','bg-red-50','text-red-700','bg-green-50','text-green-700');
+            if (tipo === 'loading') statusDiv.classList.add('bg-blue-50','text-blue-700');
+            else if (tipo === 'error') statusDiv.classList.add('bg-red-50','text-red-700');
+            else if (tipo === 'success') statusDiv.classList.add('bg-green-50','text-green-700');
+            statusDiv.innerHTML = msg;
+        }
+
+        async function fetchDisciplinasMap() {
+            try {
+                const res = await fetch(`${API}/disciplinas`);
+                if (!res.ok) return {list: [], map: {}};
+                const data = await res.json();
+                const list = data.data || data;
+                const map = {};
+                list.forEach(d => map[d.id] = d.name || d.nome || d.title || d.titulo || d);
+                return {list, map};
+            } catch (e) {
+                console.error(e);
+                return {list: [], map: {}};
+            }
+        }
+
+        async function fetchConteudosMap(disciplinaId) {
+            try {
+                const res = await fetch(`${API}/conteudos/${disciplinaId}`);
+                if (!res.ok) return {};
+                const data = await res.json();
+                const items = data || [];
+                const map = {};
+                items.forEach(it => map[it.id] = it.name || it.nome || it);
+                return map;
+            } catch (e) {
+                console.error(e);
+                return {};
+            }
+        }
+
+        btnBuscar.addEventListener('click', async () => {
+            const tipo = tipoFiltro.value;
+            const prof = profFiltro.value.trim();
+
+            if (!tipo && !prof) {
+                setStatus('Informe um tipo ou um professor para buscar.', 'error');
+                return;
+            }
+
+            setStatus('<i class="fas fa-spinner fa-spin"></i> Buscando...', 'loading');
+            resultadosDiv.innerHTML = '';
+
+            try {
+                let url;
+                if (prof) url = `${API}/historico/professor/${encodeURIComponent(prof)}`;
+                else url = `${API}/historico/tipo/${encodeURIComponent(tipo)}`;
+
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Erro ao buscar histórico');
+                const items = await res.json();
+
+                if (!items || items.length === 0) {
+                    resultadosDiv.innerHTML = '<div class="text-gray-600">Nenhum registro encontrado.</div>';
+                    setStatus('Nenhum registro encontrado.', 'success');
+                    return;
+                }
+
+                const {list: disciplinasList, map: disciplinasMap} = await fetchDisciplinasMap();
+
+                const disciplinasUnicas = Array.from(new Set(items.map(it => it.meta && it.meta.disciplina_id).filter(Boolean)));
+                const conteudosMapByDisc = {};
+                for (const d of disciplinasUnicas) {
+                    conteudosMapByDisc[d] = await fetchConteudosMap(d);
+                }
+
+                const html = items.map(it => {
+                    const ts = it.ts ? new Date(it.ts * 1000).toLocaleString() : '';
+                    const arquivo = it.arquivo;
+                    const titulo = (it.meta && it.meta.titulo) || 'Sem título';
+                    const disciplinaId = it.meta && it.meta.disciplina_id;
+                    const disciplinaNome = (disciplinasMap[disciplinaId] || disciplinaId) ;
+                    const conteudosIds = (it.meta && it.meta.conteudos) || [];
+                    const conteudosNomes = conteudosIds.map(cid => (conteudosMapByDisc[disciplinaId] && conteudosMapByDisc[disciplinaId][cid]) || cid).join(', ');
+                    const responsavel = it.responsavel || '-';
+                    const downloadUrl = `${API}/historico/download/${encodeURIComponent(arquivo)}`;
+
+                    return `
+                        <div class="p-4 bg-white rounded shadow-sm flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="text-lg font-semibold">${titulo}</div>
+                                <div class="text-sm text-gray-500">Disciplina: ${disciplinaNome}</div>
+                                <div class="text-sm text-gray-500">Conteúdos: ${conteudosNomes || '-'} </div>
+                                <div class="text-xs text-gray-400 mt-2">Gerado em: ${ts} • Responsável: ${responsavel}</div>
+                            </div>
+                            <div class="ml-4 flex flex-col gap-2">
+                                <a href="${downloadUrl}" target="_blank" class="bg-blue-600 text-white px-3 py-2 rounded">Baixar PDF</a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                resultadosDiv.innerHTML = html;
+                setStatus('Resultados carregados.', 'success');
+
+            } catch (err) {
+                console.error(err);
+                setStatus('Erro ao carregar histórico.', 'error');
+            }
+        });
+    </script>
+    </body>
+    </html>

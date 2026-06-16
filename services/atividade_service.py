@@ -30,7 +30,8 @@ class AtividadeService:
 
         resposta = self.client.questoes(
             disciplina=disciplina_id,
-            per_page=100
+            per_page=100,
+            fetch_all=True
         )
 
         questoes_brutas = resposta["data"]

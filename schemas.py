@@ -10,3 +10,11 @@ class AtividadeRequest(BaseModel):
     tipo: Optional[str] = None
     incluir_gabarito: bool = False
     titulo: str = "Atividade"
+    tipo_usuario: Optional[str] = None
+    professor: Optional[str] = None
+
+
+class UserProfile(BaseModel):
+    nome: Optional[str] = None
+    tipo: Optional[str] = "usuario"  # 'professor' ou 'usuario'
+    disciplina_preferida: Optional[str] = None

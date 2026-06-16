@@ -6,3 +6,4 @@ jinja2
 weasyprint
 beautifulsoup4
 reportlab
+httpx
