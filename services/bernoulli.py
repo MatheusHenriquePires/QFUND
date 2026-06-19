@@ -39,14 +39,31 @@ class BernoulliClient:
         self._etag = None
         self._token_expiry = None
         # cache em disco
-        self._cache_path = Path(__file__).resolve().parent.parent / "generated" / "bernoulli_cache.json"
+        self._generated_dir = Path(__file__).resolve().parent.parent / "generated"
+        self._cache_path = self._generated_dir / "bernoulli_cache.json"
+        self._log_path = self._generated_dir / "bernoulli_responses.log"
         try:
-            self._cache_path.parent.mkdir(parents=True, exist_ok=True)
+            self._generated_dir.mkdir(parents=True, exist_ok=True)
         except Exception:
             pass
 
         # tentar carregar cache em disco
         self._load_cache()
+
+    def _log_response(self, evento, payload, **metadata):
+        try:
+            registro = {
+                "ts": int(time.time()),
+                "evento": evento,
+                "metadata": metadata,
+                "payload": payload
+            }
+
+            with self._log_path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(registro, ensure_ascii=False, default=str))
+                f.write("\n")
+        except Exception:
+            pass
 
     def _load_cache(self):
         try:
@@ -136,10 +153,12 @@ class BernoulliClient:
     def disciplinas(self):
         # retorna cache em memória se válido
         if self._subjects_cache and (time.time() - self._subjects_ts < CACHE_TTL):
+            self._log_response("disciplinas", self._subjects_cache, origem="cache_memoria")
             return self._subjects_cache
 
         # se cache em disco válido foi carregado no __init__, use-o
         if self._subjects_cache:
+            self._log_response("disciplinas", self._subjects_cache, origem="cache_disco")
             return self._subjects_cache
 
         url = "https://api.bernoulli.com.br/api/banco-de-questoes/subjects"
@@ -158,6 +177,7 @@ class BernoulliClient:
 
         r.raise_for_status()
         data = r.json()
+        self._log_response("disciplinas", data, origem="api", status_code=r.status_code)
 
         # salvar cache e etag
         try:
@@ -175,8 +195,11 @@ class BernoulliClient:
 
         for d in disciplinas:
             if str(d.get("id")) == str(disciplina):
-                return d.get("subitens", [])
+                conteudos = d.get("subitens", [])
+                self._log_response("conteudos", conteudos, disciplina=disciplina, origem="disciplinas")
+                return conteudos
 
+        self._log_response("conteudos", [], disciplina=disciplina, origem="disciplinas")
         return []
 
     def questoes(
@@ -198,7 +221,11 @@ class BernoulliClient:
         # Se solicitado, buscar todas as páginas de forma concorrente (async)
         if fetch_all:
             try:
-                return asyncio.run(self._fetch_all_questions_async(disciplina=disciplina, per_page=per_page))
+                if not self.token:
+                    self.login()
+                data = asyncio.run(self._fetch_all_questions_async(disciplina=disciplina, per_page=per_page))
+                self._log_response("questoes", data, origem="api_async", params=params, fetch_all=True)
+                return data
             except Exception:
                 # fallback para requisição síncrona caso algo dê errado
                 r = self._request(
@@ -207,7 +234,9 @@ class BernoulliClient:
                     params=params
                 )
 
-                return r.json()
+                data = r.json()
+                self._log_response("questoes", data, origem="api_fallback", params=params, fetch_all=True, status_code=r.status_code)
+                return data
 
         r = self._request(
             "GET",
@@ -215,7 +244,9 @@ class BernoulliClient:
             params=params
         )
 
-        return r.json()
+        data = r.json()
+        self._log_response("questoes", data, origem="api", params=params, fetch_all=False, status_code=r.status_code)
+        return data
 
     async def _fetch_all_questions_async(self, disciplina, per_page=100, max_concurrency=8):
         import httpx
@@ -223,12 +254,16 @@ class BernoulliClient:
         url = "https://api.bernoulli.com.br/api/banco-de-questoes/questions"
 
         headers = dict(self.session.headers)
+        base_params = {}
+        if disciplina:
+            base_params["subjects"] = disciplina
 
         async def _get_with_retries(client, p):
             backoff = 0.5
             for attempt in range(3):
                 try:
-                    r = await client.get(url, params={"page": p, "per_page": per_page})
+                    params = {"page": p, "per_page": per_page, **base_params}
+                    r = await client.get(url, params=params)
                     if r.status_code == 429:
                         await asyncio.sleep(backoff)
                         backoff *= 2

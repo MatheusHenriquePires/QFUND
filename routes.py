@@ -16,7 +16,6 @@ service = AtividadeService()
 historico_service = HistoricoService()
 user_service = UserService()
 
-
 @router.get("/disciplinas")
 def listar_disciplinas():
     return service.disciplinas()
@@ -35,7 +34,10 @@ def gerar_atividade(request: AtividadeRequest):
         dificuldade=request.dificuldade,
         tipo=request.tipo,
         conteudo=request.conteudos,
-        titulo=request.titulo
+        titulo=request.titulo,
+        incluir_gabarito=request.incluir_gabarito,
+        professor=request.professor,
+        data_avaliacao=request.data_avaliacao
     )
 
     arquivo = resultado.get("arquivo")
@@ -51,7 +53,8 @@ def gerar_atividade(request: AtividadeRequest):
             "dificuldade": request.dificuldade,
             "tipo": request.tipo,
             "conteudos": request.conteudos,
-            "titulo": request.titulo
+            "titulo": request.titulo,
+            "data_avaliacao": request.data_avaliacao
         }
         tipo_usuario = getattr(request, "tipo_usuario", None) or "usuario"
         responsavel = getattr(request, "professor", None)

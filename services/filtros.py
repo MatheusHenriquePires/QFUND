@@ -1,7 +1,21 @@
 import random
+import re
+import unicodedata
 
 
 class QuestaoFiltro:
+
+    def normalizar_texto(self, valor):
+        texto = str(valor or "").lower()
+        texto = unicodedata.normalize("NFKD", texto)
+        texto = "".join(
+            c
+            for c in texto
+            if not unicodedata.combining(c)
+        )
+        texto = re.sub(r"[^a-z0-9]+", " ", texto)
+        texto = re.sub(r"\s+", " ", texto)
+        return texto.strip()
 
     def filtrar(
         self,
@@ -21,17 +35,16 @@ class QuestaoFiltro:
                 conteudo = [conteudo]
 
             conteudo = [
-                str(c).lower()
+                self.normalizar_texto(c)
                 for c in conteudo
+                if self.normalizar_texto(c)
             ]
 
             resultado = [
                 q
                 for q in resultado
                 if any(
-                    c in str(
-                        q.get("conteudo", "")
-                    ).lower()
+                    c in self.normalizar_texto(q.get("conteudo", ""))
                     for c in conteudo
                 )
             ]

@@ -9,19 +9,18 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* Estilização da barra de rolagem para o select múltiplo */
-        select[multiple]::-webkit-scrollbar {
+        .conteudos-scroll::-webkit-scrollbar {
             width: 8px;
         }
-        select[multiple]::-webkit-scrollbar-track {
+        .conteudos-scroll::-webkit-scrollbar-track {
             background: #f8fafc; 
             border-radius: 4px;
         }
-        select[multiple]::-webkit-scrollbar-thumb {
+        .conteudos-scroll::-webkit-scrollbar-thumb {
             background: #cbd5e1; 
             border-radius: 4px;
         }
-        select[multiple]::-webkit-scrollbar-thumb:hover {
+        .conteudos-scroll::-webkit-scrollbar-thumb:hover {
             background: #94a3b8; 
         }
     </style>
@@ -130,10 +129,37 @@
                             </div>
 
                             <div class="form-group md:col-span-3">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Conteúdos</label>
-                                <select id="conteudos" multiple style="height: 160px;" class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                                    </select>
-                                <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle mr-1"></i> Segure <strong>CTRL</strong> (ou <strong>CMD</strong>) para selecionar múltiplos conteúdos.</p>
+                                <div class="flex flex-col gap-3">
+                                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Conteúdos</label>
+                                            <p id="conteudosResumo" class="text-xs text-gray-500 mt-1">Selecione uma disciplina para carregar os conteúdos.</p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" id="selecionarTodosConteudos" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                                <i class="fas fa-check-double text-blue-600"></i>
+                                                Todos
+                                            </button>
+                                            <button type="button" id="limparConteudos" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                                <i class="fas fa-eraser text-gray-500"></i>
+                                                Limpar
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="relative">
+                                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                                        <input type="search" id="buscarConteudo" placeholder="Buscar conteúdo..." class="w-full border border-gray-300 rounded-lg pl-9 pr-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed" disabled>
+                                    </div>
+
+                                    <select id="conteudos" multiple class="hidden"></select>
+
+                                    <div id="conteudosLista" class="conteudos-scroll min-h-[150px] max-h-[280px] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                        <div class="h-[126px] flex items-center justify-center text-sm text-gray-500">
+                                            <span>Os conteúdos aparecerão aqui.</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -166,8 +192,17 @@
 
         const disciplinaSelect = document.getElementById("disciplina");
         const conteudosSelect = document.getElementById("conteudos");
+        const conteudosLista = document.getElementById("conteudosLista");
+        const conteudosResumo = document.getElementById("conteudosResumo");
+        const buscarConteudo = document.getElementById("buscarConteudo");
+        const selecionarTodosConteudos = document.getElementById("selecionarTodosConteudos");
+        const limparConteudos = document.getElementById("limparConteudos");
         const form = document.getElementById("atividadeForm");
         const statusDiv = document.getElementById("status");
+        let conteudosDisponiveis = [];
+        let conteudosArvore = [];
+        let conteudosSelecionados = new Set();
+        let conteudosExpandidos = new Set();
 
         // Função para atualizar as classes do Status Div (Tailwind)
         function setStatus(mensagem, tipo) {
@@ -222,21 +257,232 @@
             });
         }
 
+        function escapeHtml(texto) {
+            return String(texto)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function normalizarConteudos(conteudos, nivel = 0, caminho = []) {
+            const lista = [];
+            const arvore = [];
+
+            conteudos.forEach((conteudo) => {
+                const nome = conteudo.name || conteudo.nome || "Conteúdo sem nome";
+                const filhos = conteudo.subitens || conteudo.children || [];
+                const item = {
+                    id: String(conteudo.id),
+                    nome,
+                    grupo: caminho[caminho.length - 1] || "",
+                    caminho: [...caminho, nome].join(" > "),
+                    nivel,
+                    filhos: [],
+                    descendentes: []
+                };
+
+                if (Array.isArray(filhos) && filhos.length) {
+                    const filhosNormalizados = normalizarConteudos(filhos, nivel + 1, [...caminho, nome]);
+                    item.filhos = filhosNormalizados.arvore;
+                    item.descendentes = filhosNormalizados.lista.map((filho) => filho.id);
+                    lista.push(item, ...filhosNormalizados.lista);
+                } else {
+                    lista.push(item);
+                }
+
+                arvore.push(item);
+            });
+
+            return { lista, arvore };
+        }
+
+        function atualizarSelectConteudos() {
+            conteudosSelect.innerHTML = "";
+
+            conteudosDisponiveis.forEach((conteudo) => {
+                const option = document.createElement("option");
+                option.value = conteudo.id;
+                option.textContent = conteudo.nome;
+                option.selected = conteudosSelecionados.has(conteudo.id);
+                conteudosSelect.appendChild(option);
+            });
+        }
+
+        function atualizarResumoConteudos(totalVisivel = conteudosDisponiveis.length) {
+            const selecionados = conteudosSelecionados.size;
+
+            if (!conteudosDisponiveis.length) {
+                conteudosResumo.textContent = disciplinaSelect.value
+                    ? "Não achei conteúdos para essa matéria."
+                    : "Escolha uma matéria para eu mostrar os conteúdos.";
+                return;
+            }
+
+            const pluralEncontrados = totalVisivel === 1 ? "conteúdo" : "conteúdos";
+
+            if (selecionados) {
+                const pluralMarcados = selecionados === 1 ? "conteúdo marcado" : "conteúdos marcados";
+                conteudosResumo.textContent = `${selecionados} ${pluralMarcados}. Estou mostrando ${totalVisivel} ${pluralEncontrados}.`;
+                return;
+            }
+
+            conteudosResumo.textContent = `Encontrei ${totalVisivel} ${pluralEncontrados}. Marque os que entram na atividade.`;
+        }
+
+        function renderizarConteudos() {
+            const termo = (buscarConteudo.value || "").trim().toLowerCase();
+            const filtrados = conteudosDisponiveis.filter((conteudo) => {
+                const texto = `${conteudo.nome} ${conteudo.grupo} ${conteudo.caminho}`.toLowerCase();
+                return texto.includes(termo);
+            });
+
+            conteudosLista.innerHTML = "";
+
+            if (!conteudosDisponiveis.length) {
+                conteudosLista.innerHTML = `
+                    <div class="h-[126px] flex items-center justify-center text-sm text-gray-500">
+                        <span>Os conteúdos aparecerão aqui.</span>
+                    </div>
+                `;
+                atualizarResumoConteudos(0);
+                return;
+            }
+
+            if (!filtrados.length) {
+                conteudosLista.innerHTML = `
+                    <div class="h-[126px] flex items-center justify-center text-sm text-gray-500">
+                        <span>Nenhum conteúdo encontrado.</span>
+                    </div>
+                `;
+                atualizarResumoConteudos(0);
+                return;
+            }
+
+            const container = document.createElement("div");
+            container.className = termo
+                ? "grid grid-cols-1 md:grid-cols-2 gap-2"
+                : "space-y-1";
+
+            const criarItem = (conteudo, modoBusca = false) => {
+                const selecionado = conteudosSelecionados.has(conteudo.id);
+                const temFilhos = conteudo.filhos && conteudo.filhos.length;
+                const expandido = conteudosExpandidos.has(conteudo.id);
+                const button = document.createElement("button");
+                button.type = "button";
+                button.dataset.id = conteudo.id;
+                button.style.marginLeft = modoBusca ? "0" : `${conteudo.nivel * 18}px`;
+                button.className = [
+                    "w-full text-left rounded-lg border p-3 transition-all min-h-[58px]",
+                    "focus:outline-none focus:ring-2 focus:ring-blue-500",
+                    selecionado
+                        ? "border-blue-500 bg-blue-50 shadow-sm"
+                        : "border-gray-200 bg-white hover:border-blue-300 hover:bg-white"
+                ].join(" ");
+
+                button.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="expand-control w-5 shrink-0 text-gray-500">
+                            ${temFilhos && !modoBusca ? `<i class="fas ${expandido ? "fa-chevron-down" : "fa-chevron-right"} text-[11px]"></i>` : ""}
+                        </span>
+                        <span class="mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${selecionado ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-gray-300 text-transparent"}">
+                            <i class="fas fa-check text-[11px]"></i>
+                        </span>
+                        <span class="min-w-0">
+                            <span class="block text-sm font-semibold ${selecionado ? "text-blue-800" : "text-gray-800"}">${escapeHtml(conteudo.nome)}</span>
+                            ${conteudo.grupo ? `<span class="block text-xs text-gray-500 mt-1">${escapeHtml(modoBusca ? conteudo.caminho : conteudo.grupo)}</span>` : ""}
+                        </span>
+                    </div>
+                `;
+
+                button.addEventListener("click", (event) => {
+                    if (temFilhos && !modoBusca && event.target.closest(".expand-control")) {
+                        if (conteudosExpandidos.has(conteudo.id)) {
+                            conteudosExpandidos.delete(conteudo.id);
+                        } else {
+                            conteudosExpandidos.add(conteudo.id);
+                        }
+                    } else {
+                        alternarConteudo(conteudo);
+                    }
+
+                    atualizarSelectConteudos();
+                    renderizarConteudos();
+                });
+
+                container.appendChild(button);
+            };
+
+            const renderizarNo = (conteudo) => {
+                criarItem(conteudo, false);
+                if (conteudosExpandidos.has(conteudo.id)) {
+                    conteudo.filhos.forEach(renderizarNo);
+                }
+            };
+
+            if (termo) {
+                filtrados.forEach((conteudo) => criarItem(conteudo, true));
+            } else {
+                conteudosArvore.forEach(renderizarNo);
+            }
+
+            conteudosLista.appendChild(container);
+            atualizarResumoConteudos(filtrados.length);
+        }
+
+        function alternarConteudo(conteudo) {
+            const ids = [conteudo.id, ...(conteudo.descendentes || [])];
+            const deveSelecionar = !ids.every((id) => conteudosSelecionados.has(id));
+
+            ids.forEach((id) => {
+                if (deveSelecionar) {
+                    conteudosSelecionados.add(id);
+                } else {
+                    conteudosSelecionados.delete(id);
+                }
+            });
+
+            if (deveSelecionar && conteudo.filhos && conteudo.filhos.length) {
+                conteudosExpandidos.add(conteudo.id);
+            }
+        }
+
+        function setConteudosHabilitados(habilitado) {
+            buscarConteudo.disabled = !habilitado;
+            selecionarTodosConteudos.disabled = !habilitado;
+            limparConteudos.disabled = !habilitado;
+        }
+
         async function carregarConteudos(disciplinaId) {
             conteudosSelect.innerHTML = "";
+            conteudosDisponiveis = [];
+            conteudosArvore = [];
+            conteudosSelecionados = new Set();
+            conteudosExpandidos = new Set();
+            buscarConteudo.value = "";
+            setConteudosHabilitados(false);
+            renderizarConteudos();
+
             if (!disciplinaId) return;
 
             try {
+                conteudosLista.innerHTML = `
+                    <div class="h-[126px] flex items-center justify-center text-sm text-blue-700">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        <span>Carregando conteúdos...</span>
+                    </div>
+                `;
+
                 const response = await fetch(`${API}/conteudos/${disciplinaId}`);
                 const conteudos = await response.json();
 
-                conteudos.forEach(conteudo => {
-                    conteudosSelect.innerHTML += `
-                        <option value="${conteudo.id}" class="p-2 border-b border-gray-100 cursor-pointer">
-                            ${conteudo.name}
-                        </option>
-                    `;
-                });
+                const conteudosNormalizados = normalizarConteudos(Array.isArray(conteudos) ? conteudos : []);
+                conteudosDisponiveis = conteudosNormalizados.lista;
+                conteudosArvore = conteudosNormalizados.arvore;
+                setConteudosHabilitados(conteudosDisponiveis.length > 0);
+                atualizarSelectConteudos();
+                renderizarConteudos();
             } catch (erro) {
                 console.error(erro);
                 setStatus('<i class="fas fa-exclamation-circle"></i> Erro ao carregar conteúdos.', 'error');
@@ -245,17 +491,35 @@
 
         disciplinaSelect.addEventListener("change", () => carregarConteudos(disciplinaSelect.value));
 
+        buscarConteudo.addEventListener("input", renderizarConteudos);
+
+        selecionarTodosConteudos.addEventListener("click", () => {
+            const termo = (buscarConteudo.value || "").trim().toLowerCase();
+            conteudosDisponiveis
+                .filter((conteudo) => `${conteudo.nome} ${conteudo.grupo} ${conteudo.caminho}`.toLowerCase().includes(termo))
+                .forEach((conteudo) => conteudosSelecionados.add(conteudo.id));
+
+            atualizarSelectConteudos();
+            renderizarConteudos();
+        });
+
+        limparConteudos.addEventListener("click", () => {
+            conteudosSelecionados = new Set();
+            atualizarSelectConteudos();
+            renderizarConteudos();
+        });
+
         form.addEventListener("submit", async function (e) {
             e.preventDefault();
 
             setStatus('<i class="fas fa-spinner fa-spin mr-2"></i> Gerando atividade...', 'loading');
 
             try {
-                const conteudosSelecionados = Array.from(conteudosSelect.selectedOptions).map(opcao => opcao.value);
+                const conteudosSelecionadosPayload = Array.from(conteudosSelecionados);
 
                 const body = {
                     disciplina_id: disciplinaSelect.value,
-                    conteudos: conteudosSelecionados,
+                    conteudos: conteudosSelecionadosPayload,
                     quantidade: Number(document.getElementById("quantidade").value),
                     dificuldade: document.getElementById("dificuldade").value || null,
                     tipo: document.getElementById("tipo").value || null,
