@@ -1,59 +1,203 @@
-# QFund
+# 📚 QFund
 
-QFund é uma aplicação em Python/FastAPI para consultar questões do banco Bernoulli, filtrar por disciplina, conteúdo, dificuldade e tipo, e gerar atividades em PDF com gabarito. O projeto também inclui telas HTML simples para uso local.
+<p align="center">
+  <img src="docs/banner.png" alt="QFund Banner" width="100%">
+</p>
 
-## Funcionalidades
+<p align="center">
+  <strong>Gerador inteligente de atividades escolares integrado ao banco Bernoulli.</strong>
+</p>
 
-- Listagem de disciplinas disponíveis no banco Bernoulli.
-- Listagem de conteúdos por disciplina.
-- Geração de atividades em PDF.
-- Seleção aleatória de questões.
-- Filtros por dificuldade e tipo de questão.
-- Download de PDFs gerados anteriormente.
-- Histórico de atividades por tipo de usuário ou professor.
-- Persistência local do perfil do usuário.
+<p align="center">
 
-## Tecnologias
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.116+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![ReportLab](https://img.shields.io/badge/PDF-ReportLab-red?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-orange?style=for-the-badge)
+
+</p>
+
+---
+
+# 📖 Sobre
+
+O **QFund** é uma plataforma desenvolvida em **Python + FastAPI** para geração automática de atividades escolares utilizando o banco de questões do **Bernoulli Sistema de Ensino**.
+
+A aplicação permite selecionar disciplinas, conteúdos, dificuldades, tipos de questões e gerar **PDFs profissionais**, prontos para impressão, contendo:
+
+- Cabeçalho personalizado;
+- Questões objetivas e discursivas;
+- Imagens das questões;
+- Espaço inteligente para respostas;
+- Gabarito automático;
+- Histórico de atividades;
+- Cache das consultas.
+
+---
+
+# ✨ Funcionalidades
+
+- ✅ Integração com a API Bernoulli
+- ✅ Consulta de disciplinas
+- ✅ Consulta de conteúdos
+- ✅ Seleção aleatória de questões
+- ✅ Filtros por dificuldade
+- ✅ Filtros por tipo de questão
+- ✅ Geração automática de PDFs
+- ✅ Cabeçalho profissional
+- ✅ Logo personalizado
+- ✅ Questões com imagens
+- ✅ Área de resposta inteligente
+- ✅ Gabarito automático
+- ✅ Histórico das atividades
+- ✅ Download de PDFs
+- ✅ Perfil do usuário
+- ✅ Cache das consultas
+- ✅ Interface Web
+
+---
+
+# 🖼 Interface
+
+## Tela Principal
+
+![Tela Principal](docs/home.png)
+
+---
+
+## Histórico
+
+![Histórico](docs/history.png)
+
+---
+
+## PDF Gerado
+
+![PDF](docs/pdf.png)
+
+---
+
+# 📄 Características do PDF
+
+Os PDFs gerados possuem:
+
+- Logo institucional
+- Cabeçalho profissional
+- Nome do aluno
+- Professor
+- Disciplina
+- Data
+- Série
+- Turno
+- Questões numeradas
+- Alternativas formatadas
+- Imagens centralizadas
+- Área inteligente para resposta
+- Gabarito em página separada
+- Numeração automática das páginas
+
+---
+
+# 🚀 Tecnologias
 
 - Python
 - FastAPI
 - Uvicorn
-- Requests / HTTPX
-- BeautifulSoup
+- Requests
+- HTTPX
+- BeautifulSoup4
 - ReportLab
 - python-dotenv
+- Pydantic
 
-## Estrutura
+---
+
+# 🏗 Arquitetura
 
 ```text
-.
-├── main.py                  # Inicialização da API FastAPI
-├── routes.py                # Rotas HTTP da aplicação
-├── schemas.py               # Modelos de entrada com Pydantic
-├── requirements.txt         # Dependências Python
-├── index.html               # Tela principal
-├── history.html             # Tela de histórico
-├── generated/               # Arquivos gerados e caches locais
-│   ├── pdfs/                # PDFs das atividades
-│   ├── images/              # Imagens baixadas para os PDFs
-│   ├── history.json         # Histórico local
-│   ├── user_profile.json    # Perfil local do usuário
-│   ├── bernoulli_cache.json # Cache de disciplinas/conteúdos
-│   └── bernoulli_responses.log # Log das respostas Bernoulli
-├── models/                  # Modelos auxiliares
-├── services/                # Regras de negócio e integrações
-└── static/                  # Arquivos estáticos
+                        Usuário
+                           │
+                           ▼
+                 Interface HTML / JS
+                           │
+                           ▼
+                      FastAPI
+                           │
+                           ▼
+                  Camada de Serviços
+                           │
+        ┌──────────────────┴──────────────────┐
+        ▼                                     ▼
+ API Bernoulli                     Gerador de PDF
+        │                                     │
+        ▼                                     ▼
+   Cache Local                     ReportLab PDF
+        │                                     │
+        └──────────────────┬──────────────────┘
+                           ▼
+                   Arquivos Gerados
 ```
 
-## Pré-requisitos
+---
 
-- Python instalado.
-- Credenciais válidas da API Bernoulli.
-- Ambiente virtual Python recomendado.
+# 📁 Estrutura do Projeto
 
-## Configuração
+```text
+QFund/
+│
+├── assets/
+│   └── logo_proposito.png
+│
+├── docs/
+│   ├── banner.png
+│   ├── home.png
+│   ├── history.png
+│   └── pdf.png
+│
+├── generated/
+│   ├── images/
+│   ├── pdfs/
+│   ├── bernoulli_cache.json
+│   ├── bernoulli_responses.log
+│   ├── history.json
+│   └── user_profile.json
+│
+├── models/
+│
+├── services/
+│   ├── atividade_service.py
+│   ├── bernoulli.py
+│   ├── history_service.py
+│   ├── pdf_generator.py
+│   └── profile_service.py
+│
+├── static/
+│
+├── index.html
+├── history.html
+├── main.py
+├── routes.py
+├── schemas.py
+├── requirements.txt
+├── .env
+└── README.md
+```
 
-Crie um arquivo `.env` na raiz do projeto com as credenciais:
+---
+
+# ⚙ Pré-requisitos
+
+- Python 3.11+
+- Conta Bernoulli
+- Credenciais válidas da API
+- Ambiente virtual Python
+
+---
+
+# 🔧 Configuração
+
+Crie um arquivo `.env`
 
 ```env
 BERNOULLI_EMAIL=seu_email
@@ -61,145 +205,289 @@ BERNOULLI_PASSWORD=sua_senha
 BERNOULLI_CACHE_TTL=3600
 ```
 
-`BERNOULLI_CACHE_TTL` é opcional e define, em segundos, por quanto tempo o cache local de disciplinas será considerado válido.
+O parâmetro `BERNOULLI_CACHE_TTL` é opcional.
 
-## Instalação
+---
 
-No PowerShell, a partir da pasta do projeto:
+# 📦 Instalação
+
+Clone o projeto
+
+```bash
+git clone https://github.com/seuusuario/QFund.git
+```
+
+Entre na pasta
+
+```bash
+cd QFund
+```
+
+Crie o ambiente virtual
+
+Windows
 
 ```powershell
 python -m venv venv
-.\venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
 ```
 
-Se o ambiente virtual já existir, basta ativá-lo e instalar as dependências:
+Linux
+
+```bash
+python3 -m venv venv
+```
+
+Ative
+
+Windows
 
 ```powershell
 .\venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
 ```
 
-## Executando a API
+Linux
 
-Com o ambiente virtual ativado:
+```bash
+source venv/bin/activate
+```
 
-```powershell
+Instale as dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+# ▶ Executando
+
+```bash
 uvicorn main:app --reload
 ```
 
-A API ficará disponível em:
+A aplicação ficará disponível em
 
-```text
+```
 http://127.0.0.1:8000
 ```
 
-A tela principal também fica disponível nesse mesmo endereço:
+Swagger
 
-```text
-http://127.0.0.1:8000/
 ```
-
-A documentação automática do FastAPI pode ser acessada em:
-
-```text
 http://127.0.0.1:8000/docs
 ```
 
-## Usando as telas HTML
+---
 
-Com a API em execução, acesse as telas pelo navegador:
+# 🌐 Interface
 
-- `http://127.0.0.1:8000/`: tela principal para gerar atividades.
-- `http://127.0.0.1:8000/history`: tela para consultar histórico e baixar PDFs gerados.
+Página principal
 
-Os caminhos `/index.html` e `/history.html` também continuam disponíveis.
+```
+http://127.0.0.1:8000/
+```
 
-## Endpoints Principais
+Histórico
 
-### `GET /disciplinas`
+```
+http://127.0.0.1:8000/history
+```
 
-Retorna a lista de disciplinas disponíveis.
+---
 
-### `GET /conteudos/{disciplina_id}`
+# 📌 Endpoints
 
-Retorna os conteúdos associados a uma disciplina.
+## GET /disciplinas
 
-### `POST /gerar-atividade`
+Lista disciplinas.
 
-Gera uma atividade em PDF e retorna o arquivo para download.
+---
 
-Exemplo de corpo:
+## GET /conteudos/{disciplina_id}
+
+Lista conteúdos.
+
+---
+
+## POST /gerar-atividade
+
+Gera um PDF.
+
+### Exemplo
 
 ```json
 {
   "disciplina_id": "1",
-  "conteudos": [10, 20],
+  "conteudos": [
+    10,
+    20
+  ],
   "quantidade": 10,
   "dificuldade": "facil",
   "tipo": "objetiva",
-  "incluir_gabarito": false,
-  "titulo": "Atividade de Revisao",
+  "titulo": "Atividade de Revisão",
+  "professor": "Carlos Eduardo",
   "tipo_usuario": "professor",
-  "professor": "Nome do Professor"
+  "incluir_gabarito": true
 }
 ```
 
-### `GET /historico/tipo/{tipo}`
+---
 
-Lista atividades geradas por tipo de usuário.
+## GET /historico/tipo/{tipo}
 
-### `GET /historico/professor/{nome}`
+Consulta histórico.
 
-Lista atividades geradas por professor responsável.
+---
 
-### `GET /historico/download/{filename}`
+## GET /historico/professor/{nome}
 
-Baixa um PDF gerado anteriormente.
+Consulta por professor.
 
-### `GET /usuario`
+---
 
-Retorna o perfil salvo localmente.
+## GET /historico/download/{arquivo}
 
-### `POST /usuario`
+Download do PDF.
 
-Salva o perfil local do usuário.
+---
 
-Exemplo:
+## GET /usuario
+
+Obtém o perfil salvo.
+
+---
+
+## POST /usuario
+
+Salva o perfil.
 
 ```json
 {
-  "nome": "Maria",
-  "tipo": "professor",
-  "disciplina_preferida": "Matematica"
+    "nome":"Maria",
+    "tipo":"professor",
+    "disciplina_preferida":"Matemática"
 }
 ```
 
-## Arquivos Gerados
+---
 
-Os arquivos de saída ficam em `generated/`:
+# 📂 Arquivos Gerados
 
-- PDFs: `generated/pdfs/`
-- Imagens extraídas das questões: `generated/images/`
-- Histórico: `generated/history.json`
-- Perfil local: `generated/user_profile.json`
-- Cache Bernoulli: `generated/bernoulli_cache.json`
-- Log das respostas Bernoulli: `generated/bernoulli_responses.log`
+```
+generated/
 
-## Log Bernoulli
-
-Sempre que a aplicação carregar disciplinas, conteúdos ou questões da integração Bernoulli, uma entrada será adicionada em:
-
-```text
-generated/bernoulli_responses.log
+├── pdfs/
+├── images/
+├── history.json
+├── user_profile.json
+├── bernoulli_cache.json
+└── bernoulli_responses.log
 ```
 
-O arquivo usa o formato JSONL: cada linha é um JSON independente com `ts`, `evento`, `metadata` e `payload`.
+---
 
-## Observações
+# 📜 Log Bernoulli
 
-- O projeto depende da API Bernoulli para consultar disciplinas, conteúdos e questões.
-- As credenciais não devem ser versionadas no repositório.
-- O PDF é gerado com gabarito ao final.
-- O campo `incluir_gabarito` existe no schema, mas a geração atual sempre adiciona a página de gabarito.
-- O filtro de conteúdo é recebido pela rota, mas a implementação atual da geração usa esse valor apenas para exibição no PDF.
+Toda comunicação com a API Bernoulli é registrada automaticamente.
+
+Formato:
+
+```json
+{
+    "ts":"",
+    "evento":"",
+    "metadata":{},
+    "payload":{}
+}
+```
+
+---
+
+# ⚡ Recursos Inteligentes
+
+O gerador identifica automaticamente o tipo da questão.
+
+### Questões Discursivas
+
+Adiciona linhas para resposta.
+
+### Questões de Matemática
+
+Adiciona espaço para cálculos.
+
+### Questões Curtas
+
+Adiciona poucas linhas.
+
+### Questões Longas
+
+Adiciona várias linhas automaticamente.
+
+---
+
+# 🗂 Roadmap
+
+- [x] Integração Bernoulli
+- [x] Cache
+- [x] Histórico
+- [x] Perfil do usuário
+- [x] PDF profissional
+- [x] Geração automática
+- [x] Questões com imagens
+- [x] Gabarito
+- [ ] Login
+- [ ] Banco de dados
+- [ ] Docker
+- [ ] Testes automatizados
+- [ ] Painel administrativo
+- [ ] Exportação DOCX
+- [ ] Geração de provas em lote
+
+---
+
+# 🤝 Contribuindo
+
+1. Faça um Fork
+
+2. Crie uma branch
+
+```bash
+git checkout -b feature/minha-feature
+```
+
+3. Commit
+
+```bash
+git commit -m "Minha nova feature"
+```
+
+4. Push
+
+```bash
+git push origin feature/minha-feature
+```
+
+5. Abra um Pull Request.
+
+---
+
+# 📄 Licença
+
+Este projeto está licenciado sob a licença **MIT**.
+
+---
+
+# 👨‍💻 Autor
+
+**Matheus Henrique**
+
+Estudante de Análise e Desenvolvimento de Sistemas.
+
+Desenvolvedor Full Stack apaixonado por automação, inteligência artificial e desenvolvimento de soluções para educação.
+
+---
+
+<p align="center">
+Desenvolvido com ❤️ utilizando Python, FastAPI e ReportLab.
+</p>
