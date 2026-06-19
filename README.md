@@ -1,7 +1,7 @@
 # 📚 QFund
 
 <p align="center">
-  <img src="docs/banner.png" alt="QFund Banner" width="100%">
+  <img src="static\banner.png" alt="QFund Banner" width="100%">
 </p>
 
 <p align="center">
