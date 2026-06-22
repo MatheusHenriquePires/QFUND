@@ -4,6 +4,7 @@ from datetime import datetime
 import hashlib
 import os
 import re
+import tempfile
 import unicodedata
 
 import requests
@@ -35,11 +36,19 @@ class PDFGenerator:
     BORDA_PROP = colors.HexColor("#35539A")
 
     def __init__(self):
-        self.output_dir = Path("generated/pdfs")
+        base_dir = self._runtime_generated_dir()
+
+        self.output_dir = base_dir / "pdfs"
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.img_dir = Path("generated/images")
+        self.img_dir = base_dir / "images"
         self.img_dir.mkdir(parents=True, exist_ok=True)
+
+    def _runtime_generated_dir(self):
+        if os.getenv("VERCEL"):
+            return Path(tempfile.gettempdir()) / "qfund_generated"
+
+        return Path("generated")
 
     def limpar_html(self, texto):
         if not texto:

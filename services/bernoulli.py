@@ -3,6 +3,7 @@ import time
 import json
 import asyncio
 import base64
+import tempfile
 from pathlib import Path
 import requests
 from requests.adapters import HTTPAdapter
@@ -39,7 +40,10 @@ class BernoulliClient:
         self._etag = None
         self._token_expiry = None
         # cache em disco
-        self._generated_dir = Path(__file__).resolve().parent.parent / "generated"
+        if os.getenv("VERCEL"):
+            self._generated_dir = Path(tempfile.gettempdir()) / "qfund_generated"
+        else:
+            self._generated_dir = Path(__file__).resolve().parent.parent / "generated"
         self._cache_path = self._generated_dir / "bernoulli_cache.json"
         self._log_path = self._generated_dir / "bernoulli_responses.log"
         try:
