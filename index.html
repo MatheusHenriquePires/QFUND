@@ -313,6 +313,7 @@
         const API = window.location.origin;
 
         const CACHE_KEY = 'disciplinas_cache';
+        const CONTEUDOS_CACHE_PREFIX = 'conteudos_cache_';
         const CACHE_TTL = 1000 * 60 * 60;
 
         const disciplinaSelect = document.getElementById("disciplina");
@@ -603,6 +604,16 @@
             if (!disciplinaId) return;
 
             try {
+                const cacheKey = `${CONTEUDOS_CACHE_PREFIX}${disciplinaId}`;
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Date.now() - parsed.ts < CACHE_TTL) {
+                        aplicarConteudos(parsed.data);
+                        return;
+                    }
+                }
+
                 conteudosLista.innerHTML = `
                     <div class="h-[126px] flex items-center justify-center text-sm text-blue-700">
                         <i class="fas fa-spinner fa-spin mr-2"></i>
@@ -611,16 +622,25 @@
 
                 const response = await fetch(`${API}/conteudos/${disciplinaId}`);
                 const conteudos = await response.json();
-                const conteudosNormalizados = normalizarConteudos(Array.isArray(conteudos) ? conteudos : []);
-                conteudosDisponiveis = conteudosNormalizados.lista;
-                conteudosArvore = conteudosNormalizados.arvore;
-                setConteudosHabilitados(conteudosDisponiveis.length > 0);
-                atualizarSelectConteudos();
-                renderizarConteudos();
+
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: conteudos }));
+                } catch (e) {}
+
+                aplicarConteudos(conteudos);
             } catch (erro) {
                 console.error(erro);
                 setStatus('<i class="fas fa-exclamation-circle"></i> Erro ao carregar conteúdos.', 'error');
             }
+        }
+
+        function aplicarConteudos(conteudos) {
+            const conteudosNormalizados = normalizarConteudos(Array.isArray(conteudos) ? conteudos : []);
+            conteudosDisponiveis = conteudosNormalizados.lista;
+            conteudosArvore = conteudosNormalizados.arvore;
+            setConteudosHabilitados(conteudosDisponiveis.length > 0);
+            atualizarSelectConteudos();
+            renderizarConteudos();
         }
 
         disciplinaSelect.addEventListener("change", () => carregarConteudos(disciplinaSelect.value));

@@ -18,7 +18,18 @@ user_service = UserService()
 
 @router.get("/disciplinas")
 def listar_disciplinas():
-    return service.disciplinas()
+    resposta = service.disciplinas()
+    disciplinas = resposta.get("data", []) if isinstance(resposta, dict) else resposta
+
+    return {
+        "data": [
+            {
+                "id": disciplina.get("id"),
+                "name": disciplina.get("name")
+            }
+            for disciplina in disciplinas
+        ]
+    }
 
 
 @router.get("/conteudos/{disciplina_id}")
