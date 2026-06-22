@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 
 from services.atividade_service import AtividadeService
-from schemas import AtividadeRequest, UserProfile
+from schemas import AtividadeRequest, PreviewActionRequest, PreviewGenerateRequest, UserProfile
 from services.conteudos_service import ConteudosService
 from services.historico_service import HistoricoService
 from services.user_service import UserService
@@ -37,7 +37,8 @@ def gerar_atividade(request: AtividadeRequest):
         titulo=request.titulo,
         incluir_gabarito=request.incluir_gabarito,
         professor=request.professor,
-        data_avaliacao=request.data_avaliacao
+        data_avaliacao=request.data_avaliacao,
+        serie=request.serie
     )
 
     arquivo = resultado.get("arquivo")
@@ -54,7 +55,8 @@ def gerar_atividade(request: AtividadeRequest):
             "tipo": request.tipo,
             "conteudos": request.conteudos,
             "titulo": request.titulo,
-            "data_avaliacao": request.data_avaliacao
+            "data_avaliacao": request.data_avaliacao,
+            "serie": request.serie
         }
         tipo_usuario = getattr(request, "tipo_usuario", None) or "usuario"
         responsavel = getattr(request, "professor", None)
@@ -66,6 +68,75 @@ def gerar_atividade(request: AtividadeRequest):
         arquivo,
         media_type="application/pdf",
         filename=nome_arquivo
+    )
+
+
+@router.post("/previsualizar-atividade")
+def previsualizar_atividade(request: AtividadeRequest):
+    try:
+        return service.previsualizar(
+            disciplina_id=request.disciplina_id,
+            quantidade=request.quantidade,
+            dificuldade=request.dificuldade,
+            tipo=request.tipo,
+            conteudo=request.conteudos,
+            titulo=request.titulo,
+            incluir_gabarito=request.incluir_gabarito,
+            professor=request.professor,
+            data_avaliacao=request.data_avaliacao,
+            serie=request.serie,
+            tipo_usuario=request.tipo_usuario
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/previsualizar-atividade/trocar")
+def trocar_questao_previa(request: PreviewActionRequest):
+    try:
+        return service.trocar_questao_previa(
+            preview_id=request.preview_id,
+            questao_id=request.questao_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/previsualizar-atividade/remover")
+def remover_questao_previa(request: PreviewActionRequest):
+    try:
+        return service.remover_questao_previa(
+            preview_id=request.preview_id,
+            questao_id=request.questao_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/gerar-atividade-preview")
+def gerar_atividade_preview(request: PreviewGenerateRequest):
+    try:
+        resultado = service.gerar_previa(request.preview_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    arquivo = resultado.get("arquivo")
+    if not arquivo:
+        raise HTTPException(status_code=500, detail="Erro ao gerar arquivo")
+
+    try:
+        nome_arquivo = Path(arquivo).name
+        meta = resultado.get("meta", {})
+        tipo_usuario = meta.get("tipo_usuario") or "usuario"
+        responsavel = meta.get("professor")
+        historico_service.add_record(tipo_usuario, nome_arquivo, meta, responsavel)
+    except Exception:
+        pass
+
+    return FileResponse(
+        arquivo,
+        media_type="application/pdf",
+        filename=Path(arquivo).name
     )
 
 

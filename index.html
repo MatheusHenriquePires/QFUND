@@ -47,19 +47,17 @@
             <div class="p-5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Menu
             </div>
-                
+            <ul class="px-3 space-y-1">
                 <li>
                     <a href="#atividadeForm" id="menuGerar" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-50 text-blue-600 font-medium transition-colors border-l-4 border-blue-600">
                         <i class="fas fa-file-alt w-5 text-center"></i> Gerar Atividades
                     </a>
                 </li>
-
                 <li>
                     <a href="history.html" id="menuHistorico" class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors">
                         <i class="fas fa-history w-5 text-center"></i> Histórico
                     </a>
                 </li>
-
             </ul>
         </aside>
 
@@ -78,6 +76,7 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             
+                            <!-- Disciplina -->
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Disciplina <span class="text-red-500">*</span></label>
                                 <select id="disciplina" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
@@ -85,6 +84,36 @@
                                 </select>
                             </div>
 
+                            <!-- Série -->
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Série
+                                    <span class="ml-1 text-xs text-gray-400 font-normal">(filtra por nível)</span>
+                                </label>
+                                <select id="serie" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                                    <option value="">Todas as séries</option>
+                                    <optgroup label="Ensino Fundamental I">
+                                        <option value="EF1">1º ano</option>
+                                        <option value="EF2">2º ano</option>
+                                        <option value="EF3">3º ano</option>
+                                        <option value="EF4">4º ano</option>
+                                        <option value="EF5">5º ano</option>
+                                    </optgroup>
+                                    <optgroup label="Ensino Fundamental II">
+                                        <option value="EF6">6º ano</option>
+                                        <option value="EF7">7º ano</option>
+                                        <option value="EF8">8º ano</option>
+                                        <option value="EF9">9º ano</option>
+                                    </optgroup>
+                                    <optgroup label="Ensino Médio">
+                                        <option value="EM1">1º ano EM</option>
+                                        <option value="EM2">2º ano EM</option>
+                                        <option value="EM3">3º ano EM</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <!-- Tipo de usuário -->
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de usuário</label>
                                 <select id="tipo_usuario" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
@@ -94,16 +123,19 @@
                                 </select>
                             </div>
 
+                            <!-- Professor responsável -->
                             <div id="professorField" class="form-group hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Professor responsável</label>
                                 <input type="text" id="professor" placeholder="Nome do professor" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                             </div>
 
+                            <!-- Quantidade -->
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Quantidade <span class="text-red-500">*</span></label>
                                 <input type="number" id="quantidade" value="10" min="1" max="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                             </div>
 
+                            <!-- Dificuldade -->
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Dificuldade</label>
                                 <select id="dificuldade" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
@@ -114,6 +146,7 @@
                                 </select>
                             </div>
 
+                            <!-- Tipo -->
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
                                 <select id="tipo" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
@@ -123,11 +156,24 @@
                                 </select>
                             </div>
 
+                            <!-- Título -->
                             <div class="form-group md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
                                 <input type="text" id="titulo" value="Atividade" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                             </div>
 
+                            <!-- Aviso de série selecionada -->
+                            <div id="serieAviso" class="md:col-span-3 hidden">
+                                <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg px-4 py-2.5">
+                                    <i class="fas fa-info-circle shrink-0"></i>
+                                    <span>
+                                        Filtro de série ativo: a prévia vai priorizar questões compatíveis com a série escolhida.
+                                        A primeira busca pode levar alguns segundos — as próximas usam cache local.
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Conteúdos -->
                             <div class="form-group md:col-span-3">
                                 <div class="flex flex-col gap-3">
                                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -163,15 +209,17 @@
                             </div>
                         </div>
 
+                        <!-- Gabarito -->
                         <div class="flex items-center">
                             <input type="checkbox" id="gabarito" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
                             <label for="gabarito" class="ml-3 text-sm font-medium text-gray-700 cursor-pointer">Incluir gabarito no final do documento</label>
                         </div>
 
+                        <!-- Botão -->
                         <div class="pt-6 border-t border-gray-100 mt-6 flex flex-col items-end">
                             <div class="flex gap-3">
-                                <button type="submit" class="w-full md:w-auto md:min-w-[220px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 px-6 rounded-lg shadow-sm transition-colors flex justify-center items-center gap-2 text-[15px]">
-                                    <i class="fas fa-file-pdf"></i> GERAR PDF
+                                <button type="submit" class="w-full md:w-auto md:min-w-[260px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 px-6 rounded-lg shadow-sm transition-colors flex justify-center items-center gap-2 text-[15px]">
+                                    <i class="fas fa-eye"></i> PRÉ-VISUALIZAR AVALIAÇÃO
                                 </button>
                             </div>
                         </div>
@@ -184,13 +232,92 @@
         </main>
     </div>
 
+    <div id="previewModal" class="fixed inset-0 z-50 hidden bg-slate-950/70">
+        <div class="h-full w-full flex flex-col bg-slate-100">
+            <div class="h-16 bg-white border-b border-slate-200 px-5 md:px-8 flex items-center justify-between shrink-0">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Prévia da avaliação</h2>
+                    <p id="previewResumo" class="text-xs text-slate-500 mt-0.5">Revise as questões antes de gerar o PDF.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="previewGerarPdf" class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-4 py-2.5 rounded-lg">
+                        <i class="fas fa-file-pdf"></i>
+                        Gerar PDF
+                    </button>
+                    <button type="button" id="previewFechar" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[300px_1fr]">
+                <aside class="bg-white border-r border-slate-200 p-5 overflow-y-auto">
+                    <div id="previewStats" class="space-y-3"></div>
+                </aside>
+
+                <section class="overflow-y-auto p-4 md:p-8">
+                    <div class="max-w-4xl mx-auto bg-white shadow-sm border border-slate-200 min-h-full p-6 md:p-10">
+                        <div class="border-b border-slate-200 pb-5 mb-6">
+                            <div class="flex items-start justify-between gap-6">
+                                <div class="flex-1 min-w-0 pt-2">
+                                    <div id="previewTitulo" class="text-2xl text-[#183A7D] truncate">ATIVIDADE</div>
+                                    <div class="h-1.5 bg-[#F5C400] mt-3 w-full"></div>
+                                </div>
+                                <div class="hidden md:flex items-center gap-4 shrink-0 text-[#183A7D]">
+                                    <div class="h-[72px] border-l-2 border-[#183A7D]"></div>
+                                    <img src="/assets/logo_proposito.png" alt="Colégio Propósito" class="h-16 w-auto object-contain">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-[1fr_160px] gap-2 mt-5 text-xs">
+                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px]">
+                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">ALUNO(A)</span>
+                                </div>
+                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px] text-center">
+                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">DATA</span>
+                                    <div id="previewData" class="font-bold text-slate-900 mt-1"></div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-[1fr_145px_1fr_1.2fr] gap-2 mt-3 text-xs">
+                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px] text-center">
+                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">ANO/SÉRIE/CURSO</span>
+                                    <div id="previewSerie" class="font-bold text-slate-900 mt-1">5EFI</div>
+                                </div>
+                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px]">
+                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">TURNO</span>
+                                    <div class="flex items-center justify-center gap-3 mt-1 text-[#183A7D]">
+                                        <span><span class="inline-block w-3 h-3 rounded-full border border-[#183A7D] align-middle"></span> MANHÃ</span>
+                                        <span><span class="inline-block w-3 h-3 rounded-full border border-[#183A7D] align-middle"></span> TARDE</span>
+                                    </div>
+                                </div>
+                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px] text-center">
+                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">DISCIPLINA</span>
+                                    <div id="previewDisciplina" class="font-bold text-slate-900 mt-1"></div>
+                                </div>
+                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px] text-center">
+                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">PROFESSOR(A)</span>
+                                    <div id="previewProfessor" class="font-bold text-slate-900 mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="previewQuestoes" class="space-y-6"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API = "http://127.0.0.1:8000";
 
         const CACHE_KEY = 'disciplinas_cache';
-        const CACHE_TTL = 1000 * 60 * 60; // 1 hora em ms
+        const CACHE_TTL = 1000 * 60 * 60;
 
         const disciplinaSelect = document.getElementById("disciplina");
+        const serieSelect = document.getElementById("serie");
+        const serieAviso = document.getElementById("serieAviso");
         const conteudosSelect = document.getElementById("conteudos");
         const conteudosLista = document.getElementById("conteudosLista");
         const conteudosResumo = document.getElementById("conteudosResumo");
@@ -199,25 +326,43 @@
         const limparConteudos = document.getElementById("limparConteudos");
         const form = document.getElementById("atividadeForm");
         const statusDiv = document.getElementById("status");
+        const previewModal = document.getElementById("previewModal");
+        const previewResumo = document.getElementById("previewResumo");
+        const previewStats = document.getElementById("previewStats");
+        const previewQuestoes = document.getElementById("previewQuestoes");
+        const previewFechar = document.getElementById("previewFechar");
+        const previewGerarPdf = document.getElementById("previewGerarPdf");
+        const previewTitulo = document.getElementById("previewTitulo");
+        const previewDisciplina = document.getElementById("previewDisciplina");
+        const previewProfessor = document.getElementById("previewProfessor");
+        const previewData = document.getElementById("previewData");
+        const previewSerie = document.getElementById("previewSerie");
+
         let conteudosDisponiveis = [];
         let conteudosArvore = [];
         let conteudosSelecionados = new Set();
         let conteudosExpandidos = new Set();
+        let previewAtual = null;
 
-        // Função para atualizar as classes do Status Div (Tailwind)
+        // Mostrar/ocultar aviso de série
+        serieSelect.addEventListener("change", () => {
+            if (serieSelect.value) {
+                serieAviso.classList.remove("hidden");
+            } else {
+                serieAviso.classList.add("hidden");
+            }
+        });
+
         function setStatus(mensagem, tipo) {
             statusDiv.classList.remove("hidden", "bg-blue-50", "text-blue-700", "bg-red-50", "text-red-700", "bg-green-50", "text-green-700");
-            
             if (tipo === "loading") statusDiv.classList.add("bg-blue-50", "text-blue-700");
             else if (tipo === "error") statusDiv.classList.add("bg-red-50", "text-red-700");
             else if (tipo === "success") statusDiv.classList.add("bg-green-50", "text-green-700");
-            
             statusDiv.innerHTML = mensagem;
         }
 
         async function carregarDisciplinas() {
             try {
-                // tenta cache local primeiro
                 const cached = localStorage.getItem(CACHE_KEY);
                 if (cached) {
                     const parsed = JSON.parse(cached);
@@ -229,15 +374,11 @@
 
                 const response = await fetch(`${API}/disciplinas`);
                 const data = await response.json();
-
                 const disciplinas = data.data || data;
 
-                // salvar no cache local
                 try {
                     localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: disciplinas }));
-                } catch (e) {
-                    // falha no storage não é crítico
-                }
+                } catch (e) {}
 
                 preencherDisciplinas(disciplinas);
             } catch (erro) {
@@ -249,11 +390,7 @@
         function preencherDisciplinas(disciplinas) {
             disciplinaSelect.innerHTML = '<option value="">Selecione...</option>';
             disciplinas.forEach(disciplina => {
-                disciplinaSelect.innerHTML += `
-                    <option value="${disciplina.id}">
-                        ${disciplina.name}
-                    </option>
-                `;
+                disciplinaSelect.innerHTML += `<option value="${disciplina.id}">${disciplina.name}</option>`;
             });
         }
 
@@ -266,7 +403,7 @@
                 .replace(/'/g, "&#039;");
         }
 
-        function normalizarConteudos(conteudos, nivel = 0, caminho = []) {
+        function normalizarConteudos(conteudos, nivel = 0, caminho = [], caminhoIds = []) {
             const lista = [];
             const arvore = [];
 
@@ -278,13 +415,19 @@
                     nome,
                     grupo: caminho[caminho.length - 1] || "",
                     caminho: [...caminho, nome].join(" > "),
+                    caminhoIds: [...caminhoIds, String(conteudo.id)],
                     nivel,
                     filhos: [],
                     descendentes: []
                 };
 
                 if (Array.isArray(filhos) && filhos.length) {
-                    const filhosNormalizados = normalizarConteudos(filhos, nivel + 1, [...caminho, nome]);
+                    const filhosNormalizados = normalizarConteudos(
+                        filhos,
+                        nivel + 1,
+                        [...caminho, nome],
+                        [...caminhoIds, String(conteudo.id)]
+                    );
                     item.filhos = filhosNormalizados.arvore;
                     item.descendentes = filhosNormalizados.lista.map((filho) => filho.id);
                     lista.push(item, ...filhosNormalizados.lista);
@@ -300,7 +443,6 @@
 
         function atualizarSelectConteudos() {
             conteudosSelect.innerHTML = "";
-
             conteudosDisponiveis.forEach((conteudo) => {
                 const option = document.createElement("option");
                 option.value = conteudo.id;
@@ -344,8 +486,7 @@
                 conteudosLista.innerHTML = `
                     <div class="h-[126px] flex items-center justify-center text-sm text-gray-500">
                         <span>Os conteúdos aparecerão aqui.</span>
-                    </div>
-                `;
+                    </div>`;
                 atualizarResumoConteudos(0);
                 return;
             }
@@ -354,8 +495,7 @@
                 conteudosLista.innerHTML = `
                     <div class="h-[126px] flex items-center justify-center text-sm text-gray-500">
                         <span>Nenhum conteúdo encontrado.</span>
-                    </div>
-                `;
+                    </div>`;
                 atualizarResumoConteudos(0);
                 return;
             }
@@ -393,8 +533,7 @@
                             <span class="block text-sm font-semibold ${selecionado ? "text-blue-800" : "text-gray-800"}">${escapeHtml(conteudo.nome)}</span>
                             ${conteudo.grupo ? `<span class="block text-xs text-gray-500 mt-1">${escapeHtml(modoBusca ? conteudo.caminho : conteudo.grupo)}</span>` : ""}
                         </span>
-                    </div>
-                `;
+                    </div>`;
 
                 button.addEventListener("click", (event) => {
                     if (temFilhos && !modoBusca && event.target.closest(".expand-control")) {
@@ -406,7 +545,6 @@
                     } else {
                         alternarConteudo(conteudo);
                     }
-
                     atualizarSelectConteudos();
                     renderizarConteudos();
                 });
@@ -434,7 +572,6 @@
         function alternarConteudo(conteudo) {
             const ids = [conteudo.id, ...(conteudo.descendentes || [])];
             const deveSelecionar = !ids.every((id) => conteudosSelecionados.has(id));
-
             ids.forEach((id) => {
                 if (deveSelecionar) {
                     conteudosSelecionados.add(id);
@@ -442,7 +579,6 @@
                     conteudosSelecionados.delete(id);
                 }
             });
-
             if (deveSelecionar && conteudo.filhos && conteudo.filhos.length) {
                 conteudosExpandidos.add(conteudo.id);
             }
@@ -471,12 +607,10 @@
                     <div class="h-[126px] flex items-center justify-center text-sm text-blue-700">
                         <i class="fas fa-spinner fa-spin mr-2"></i>
                         <span>Carregando conteúdos...</span>
-                    </div>
-                `;
+                    </div>`;
 
                 const response = await fetch(`${API}/conteudos/${disciplinaId}`);
                 const conteudos = await response.json();
-
                 const conteudosNormalizados = normalizarConteudos(Array.isArray(conteudos) ? conteudos : []);
                 conteudosDisponiveis = conteudosNormalizados.lista;
                 conteudosArvore = conteudosNormalizados.arvore;
@@ -490,7 +624,6 @@
         }
 
         disciplinaSelect.addEventListener("change", () => carregarConteudos(disciplinaSelect.value));
-
         buscarConteudo.addEventListener("input", renderizarConteudos);
 
         selecionarTodosConteudos.addEventListener("click", () => {
@@ -498,7 +631,6 @@
             conteudosDisponiveis
                 .filter((conteudo) => `${conteudo.nome} ${conteudo.grupo} ${conteudo.caminho}`.toLowerCase().includes(termo))
                 .forEach((conteudo) => conteudosSelecionados.add(conteudo.id));
-
             atualizarSelectConteudos();
             renderizarConteudos();
         });
@@ -509,45 +641,197 @@
             renderizarConteudos();
         });
 
-        form.addEventListener("submit", async function (e) {
-            e.preventDefault();
+        function montarPayloadAtividade() {
+            const tipoVal = document.getElementById("tipo_usuario").value || null;
+            const body = {
+                disciplina_id: disciplinaSelect.value,
+                conteudos: montarConteudosSelecionadosPayload(),
+                quantidade: Number(document.getElementById("quantidade").value),
+                dificuldade: document.getElementById("dificuldade").value || null,
+                tipo: document.getElementById("tipo").value || null,
+                incluir_gabarito: document.getElementById("gabarito").checked,
+                titulo: document.getElementById("titulo").value,
+                serie: serieSelect.value || null
+            };
 
-            setStatus('<i class="fas fa-spinner fa-spin mr-2"></i> Gerando atividade...', 'loading');
+            if (tipoVal) body.tipo_usuario = tipoVal;
+            if (tipoVal === "professor") {
+                body.professor = document.getElementById("professor").value || null;
+            }
+
+            return body;
+        }
+
+        function montarConteudosSelecionadosPayload() {
+            const selecionados = conteudosDisponiveis.filter((conteudo) => {
+                if (!conteudosSelecionados.has(conteudo.id)) return false;
+
+                const ancestraisSelecionados = (conteudo.caminhoIds || [])
+                    .slice(0, -1)
+                    .some((id) => conteudosSelecionados.has(id));
+
+                return !ancestraisSelecionados;
+            });
+
+            return selecionados.map((conteudo) => conteudo.caminho || conteudo.nome);
+        }
+
+        function abrirPreviewModal() {
+            previewModal.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function fecharPreviewModal() {
+            previewModal.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+
+        function renderizarPreview(data) {
+            previewAtual = data;
+            abrirPreviewModal();
+
+            const stats = data.estatisticas || {};
+            const dificuldades = Object.entries(stats.dificuldades || {})
+                .map(([nome, total]) => `${escapeHtml(nome)}: <b>${total}</b>`)
+                .join("<br>");
+
+            previewResumo.textContent = `${data.quantidade} questões na prévia · ${data.reservas || 0} reservas para troca`;
+            previewTitulo.textContent = ((data.meta && data.meta.titulo) || "Atividade").toUpperCase();
+            previewDisciplina.textContent = data.disciplina || "-";
+            previewProfessor.textContent = (data.meta && data.meta.professor) || "-";
+            previewData.textContent = (data.meta && data.meta.data_avaliacao) || new Date().toLocaleDateString("pt-BR");
+            previewSerie.textContent = (data.meta && data.meta.serie) || "5EFI";
+
+            previewStats.innerHTML = `
+                <div class="rounded-lg border border-slate-200 p-4">
+                    <div class="text-xs font-bold text-slate-500 uppercase">Resumo</div>
+                    <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+                        <div class="rounded bg-slate-50 p-3"><b>${data.quantidade}</b><br><span class="text-slate-500">questões</span></div>
+                        <div class="rounded bg-slate-50 p-3"><b>${data.reservas || 0}</b><br><span class="text-slate-500">reservas</span></div>
+                        <div class="rounded bg-slate-50 p-3"><b>${stats.objetivas || 0}</b><br><span class="text-slate-500">objetivas</span></div>
+                        <div class="rounded bg-slate-50 p-3"><b>${stats.discursivas || 0}</b><br><span class="text-slate-500">discursivas</span></div>
+                    </div>
+                </div>
+                <div class="rounded-lg border border-slate-200 p-4 text-sm">
+                    <div class="text-xs font-bold text-slate-500 uppercase mb-2">Dificuldades</div>
+                    ${dificuldades || "<span class='text-slate-500'>Sem dados</span>"}
+                </div>
+                <div class="rounded-lg border border-slate-200 p-4 text-sm">
+                    <div class="text-xs font-bold text-slate-500 uppercase mb-2">Imagens</div>
+                    ${stats.com_imagem || 0} questões com imagem
+                </div>
+            `;
+
+            previewQuestoes.innerHTML = "";
+
+            if (!data.questoes || !data.questoes.length) {
+                previewQuestoes.innerHTML = `
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 text-amber-800 p-4 text-sm">
+                        Nenhuma questão encontrada para esses filtros.
+                    </div>`;
+                return;
+            }
+
+            data.questoes.forEach((questao) => {
+                const card = document.createElement("article");
+                card.className = "border border-slate-200 rounded-lg p-4 md:p-5";
+                card.dataset.questaoId = questao.id;
+
+                const alternativas = (questao.alternativas || [])
+                    .map((alt) => `<div class="mt-1">${escapeHtml(alt)}</div>`)
+                    .join("");
+
+                const imagens = (questao.imagens || [])
+                    .map((src) => `<img src="${escapeHtml(src)}" class="my-3 max-h-64 max-w-full object-contain border border-slate-200 rounded" alt="">`)
+                    .join("");
+
+                const meta = [
+                    questao.tipo,
+                    questao.dificuldade,
+                    questao.conteudo
+                ].filter(Boolean).map(escapeHtml).join(" · ");
+
+                card.innerHTML = `
+                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="text-xs text-slate-500 mb-2">${meta}</div>
+                            <div class="font-semibold text-slate-900 leading-relaxed">${questao.numero}. ${escapeHtml(questao.enunciado || "")}</div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button type="button" class="trocar-questao inline-flex items-center gap-2 rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-2 text-xs font-bold">
+                                <i class="fas fa-sync-alt"></i> Trocar
+                            </button>
+                            <button type="button" class="remover-questao inline-flex items-center gap-2 rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 text-xs font-bold">
+                                <i class="fas fa-trash"></i> Remover
+                            </button>
+                        </div>
+                    </div>
+                    ${imagens}
+                    <div class="mt-3 text-sm leading-relaxed">${alternativas}</div>
+                    ${questao.tipo === "discursiva" ? "<div class='mt-4 space-y-3'><div class='border-b border-slate-300 h-5'></div><div class='border-b border-slate-300 h-5'></div><div class='border-b border-slate-300 h-5'></div></div>" : ""}
+                `;
+
+                card.querySelector(".trocar-questao").addEventListener("click", () => trocarQuestaoPreview(questao.id));
+                card.querySelector(".remover-questao").addEventListener("click", () => removerQuestaoPreview(questao.id));
+                previewQuestoes.appendChild(card);
+            });
+        }
+
+        async function trocarQuestaoPreview(questaoId) {
+            if (!previewAtual) return;
 
             try {
-                const conteudosSelecionadosPayload = Array.from(conteudosSelecionados);
-
-                const body = {
-                    disciplina_id: disciplinaSelect.value,
-                    conteudos: conteudosSelecionadosPayload,
-                    quantidade: Number(document.getElementById("quantidade").value),
-                    dificuldade: document.getElementById("dificuldade").value || null,
-                    tipo: document.getElementById("tipo").value || null,
-                    incluir_gabarito: document.getElementById("gabarito").checked,
-                    titulo: document.getElementById("titulo").value
-                };
-                // incluir tipo de usuário e professor responsável se aplicável
-                const tipoVal = (document.getElementById("tipo_usuario").value) || null;
-                if (tipoVal) body.tipo_usuario = tipoVal;
-                if (tipoVal === 'professor') {
-                    body.professor = document.getElementById('professor').value || null;
-                }
-
-                const response = await fetch(`${API}/gerar-atividade`, {
+                previewResumo.textContent = "Trocando questão...";
+                const response = await fetch(`${API}/previsualizar-atividade/trocar`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify({ preview_id: previewAtual.preview_id, questao_id: questaoId })
                 });
 
-                if (!response.ok) {
-                    const erro = await response.text();
-                    throw new Error(erro);
-                }
+                if (!response.ok) throw new Error(await response.text());
+                renderizarPreview(await response.json());
+            } catch (erro) {
+                console.error(erro);
+                alert("Não consegui trocar essa questão. Talvez não haja reserva compatível.");
+            }
+        }
+
+        async function removerQuestaoPreview(questaoId) {
+            if (!previewAtual) return;
+
+            try {
+                const response = await fetch(`${API}/previsualizar-atividade/remover`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ preview_id: previewAtual.preview_id, questao_id: questaoId })
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+                renderizarPreview(await response.json());
+            } catch (erro) {
+                console.error(erro);
+                alert("Não consegui remover essa questão.");
+            }
+        }
+
+        async function gerarPdfDaPreview() {
+            if (!previewAtual) return;
+
+            previewGerarPdf.disabled = true;
+            previewGerarPdf.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+
+            try {
+                const response = await fetch(`${API}/gerar-atividade-preview`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ preview_id: previewAtual.preview_id })
+                });
+
+                if (!response.ok) throw new Error(await response.text());
 
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement("a");
-
                 link.href = url;
                 link.download = "atividade.pdf";
                 document.body.appendChild(link);
@@ -555,18 +839,53 @@
                 link.remove();
                 window.URL.revokeObjectURL(url);
 
+                fecharPreviewModal();
                 setStatus('<i class="fas fa-check-circle mr-2"></i> PDF gerado com sucesso!', 'success');
-                
-                // Remove o aviso de sucesso após 5 segundos
-                setTimeout(() => { statusDiv.classList.add("hidden"); }, 5000);
+            } catch (erro) {
+                console.error(erro);
+                alert("Erro ao gerar o PDF da prévia.");
+            } finally {
+                previewGerarPdf.disabled = false;
+                previewGerarPdf.innerHTML = '<i class="fas fa-file-pdf"></i> Gerar PDF';
+            }
+        }
+
+        previewFechar.addEventListener("click", fecharPreviewModal);
+        previewGerarPdf.addEventListener("click", gerarPdfDaPreview);
+
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const serieVal = serieSelect.value || null;
+
+            if (serieVal) {
+                setStatus('<i class="fas fa-spinner fa-spin mr-2"></i> Preparando a prévia com o filtro de série... isso pode levar alguns segundos na primeira vez.', 'loading');
+            } else {
+                setStatus('<i class="fas fa-spinner fa-spin mr-2"></i> Gerando atividade...', 'loading');
+            }
+
+            try {
+                const response = await fetch(`${API}/previsualizar-atividade`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(montarPayloadAtividade())
+                });
+
+                if (!response.ok) {
+                    const erro = await response.text();
+                    throw new Error(erro);
+                }
+
+                renderizarPreview(await response.json());
+                statusDiv.classList.add("hidden");
 
             } catch (erro) {
                 console.error(erro);
-                setStatus('<i class="fas fa-times-circle mr-2"></i> Erro ao gerar atividade.', 'error');
+                setStatus('<i class="fas fa-times-circle mr-2"></i> Erro ao montar a prévia.', 'error');
             }
         });
 
-        // carregar/salvar perfil do usuário e mostrar/ocultar campo professor
+        // Perfil do usuário
         const tipoSelect = document.getElementById('tipo_usuario');
         const professorField = document.getElementById('professorField');
         const professorInput = document.getElementById('professor');

@@ -13,9 +13,20 @@ class AtividadeRequest(BaseModel):
     tipo_usuario: Optional[str] = None
     professor: Optional[str] = None
     data_avaliacao: Optional[str] = None
+    serie: Optional[str] = None  # ex: "EF6", "EM1"
+
+
+class PreviewActionRequest(BaseModel):
+    preview_id: str
+    questao_id: Union[str, int]
+
+
+class PreviewGenerateRequest(BaseModel):
+    preview_id: str
 
 
 class UserProfile(BaseModel):
     nome: Optional[str] = None
     tipo: Optional[str] = "usuario"  # 'professor' ou 'usuario'
     disciplina_preferida: Optional[str] = None
+

@@ -7,7 +7,6 @@ import re
 import unicodedata
 
 import requests
-from reportlab.lib.utils import ImageReader
 from bs4 import BeautifulSoup
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
@@ -30,6 +29,7 @@ from reportlab.platypus import (
 class PDFGenerator:
 
     PAGE_WIDTH, PAGE_HEIGHT = A4
+    LOGO_PATH = Path("assets/logo_proposito.png")
     AZUL_PROP = colors.HexColor("#183A7D")
     AMARELO_PROP = colors.HexColor("#F5C400")
     BORDA_PROP = colors.HexColor("#35539A")
@@ -63,6 +63,7 @@ class PDFGenerator:
     ):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         arquivo = self.output_dir / f"atividade_{timestamp}.pdf"
+        self._titulo_cabecalho = str(titulo or "Atividade").upper()
         self._disciplina_cabecalho = str(disciplina or "").upper()
         self._disciplina_resposta = self._normalizar_texto(disciplina)
         self._professor_cabecalho = str(professor or "CARLOS EDUARDO").upper()
@@ -390,7 +391,14 @@ class PDFGenerator:
 
         canvas.setFillColor(self.AZUL_PROP)
         canvas.setFont("Helvetica", 18)
-        canvas.drawString(margem_x, topo - 9 * mm, "ATIVIDADE COMPLEMENTAR -001/02")
+        titulo = self._texto_limitado_canvas(
+            canvas,
+            self._titulo_cabecalho,
+            135 * mm,
+            "Helvetica",
+            18,
+        )
+        canvas.drawString(margem_x, topo - 9 * mm, titulo)
 
         canvas.setStrokeColor(self.AMARELO_PROP)
         canvas.setLineWidth(5)
@@ -400,17 +408,7 @@ class PDFGenerator:
         canvas.setStrokeColor(self.AZUL_PROP)
         canvas.setLineWidth(1.2)
         canvas.line(logo_x - 4 * mm, topo - 18 * mm, logo_x - 4 * mm, topo + 1 * mm)
-        logo = ImageReader("assets/logo_proposito.png")
-
-        canvas.drawImage(
-        logo,
-        logo_x,
-        topo - 20 * mm,
-        width=48 * mm,
-        height=18 * mm,
-        preserveAspectRatio=True,
-        mask="auto",
-        )
+        self._desenhar_logo_proposito(canvas, logo_x, topo - 20 * mm)
 
         y_aluno = topo - 32 * mm
         self._campo_retangular(
@@ -467,27 +465,22 @@ class PDFGenerator:
         )
 
     def _desenhar_logo_proposito(self, canvas, x, y):
-        canvas.saveState()
+        if not self.LOGO_PATH.exists():
+            return
 
-        icon_x = x + 3 * mm
-        icon_y = y + 4 * mm
-        canvas.setStrokeColor(self.AZUL_PROP)
-        canvas.setLineWidth(4)
-        canvas.line(icon_x, icon_y, icon_x, icon_y + 16 * mm)
-        canvas.line(icon_x, icon_y, icon_x + 12 * mm, icon_y + 8 * mm)
-        canvas.line(icon_x, icon_y + 16 * mm, icon_x + 12 * mm, icon_y + 8 * mm)
-
-        canvas.setStrokeColor(self.AMARELO_PROP)
-        canvas.setLineWidth(4)
-        canvas.circle(icon_x + 9 * mm, icon_y + 8 * mm, 6 * mm, stroke=1, fill=0)
-
-        canvas.setFillColor(self.AZUL_PROP)
-        canvas.setFont("Helvetica", 13)
-        canvas.drawString(x + 21 * mm, y + 14 * mm, "colégio")
-        canvas.setFont("Helvetica-Bold", 21)
-        canvas.drawString(x + 21 * mm, y + 5 * mm, "propósito")
-
-        canvas.restoreState()
+        try:
+            logo = ImageReader(str(self.LOGO_PATH))
+            canvas.drawImage(
+                logo,
+                x,
+                y,
+                width=48 * mm,
+                height=18 * mm,
+                preserveAspectRatio=True,
+                mask="auto",
+            )
+        except Exception as e:
+            print("Erro ao desenhar logo:", e)
 
     def _campo_retangular(self, canvas, x, y, largura, altura, rotulo, valor, valor_font_size=8.5):
         canvas.setStrokeColor(self.BORDA_PROP)
