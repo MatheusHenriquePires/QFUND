@@ -32,6 +32,7 @@
         let conteudosSelecionados = new Set();
         let conteudosExpandidos = new Set();
         let previewAtual = null;
+        let disciplinasDisponiveis = [];
 
         // Mostrar/ocultar aviso de série
         serieSelect.addEventListener("change", () => {
@@ -40,6 +41,8 @@
             } else {
                 serieAviso.classList.add("hidden");
             }
+
+            preencherDisciplinas(disciplinasDisponiveis);
         });
 
         function setStatus(mensagem, tipo) {
@@ -94,19 +97,21 @@
                 if (cached) {
                     const parsed = JSON.parse(cached);
                     if (Date.now() - parsed.ts < CACHE_TTL) {
-                        preencherDisciplinas(parsed.data);
+                        disciplinasDisponiveis = parsed.data || [];
+                        preencherDisciplinas(disciplinasDisponiveis);
                         return;
                     }
                 }
 
                 const data = await fetchJson(`${API}/disciplinas`, {}, "carregar disciplinas");
                 const disciplinas = data.data || data;
+                disciplinasDisponiveis = disciplinas;
 
                 try {
                     localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: disciplinas }));
                 } catch (e) {}
 
-                preencherDisciplinas(disciplinas);
+                preencherDisciplinas(disciplinasDisponiveis);
             } catch (erro) {
                 registrarErro("Erro ao carregar disciplinas", erro);
                 setStatus(`<i class="fas fa-exclamation-circle"></i> ${textoErro(erro, "Erro ao carregar disciplinas.")}`, 'error');
@@ -114,10 +119,44 @@
         }
 
         function preencherDisciplinas(disciplinas) {
-            disciplinaSelect.innerHTML = '<option value="">Selecione...</option>';
-            disciplinas.forEach(disciplina => {
+            const selecionada = disciplinaSelect.value;
+            const serie = serieSelect.value;
+            const disciplinasFiltradas = filtrarDisciplinasPorSerie(disciplinas, serie);
+
+            disciplinaSelect.innerHTML = serie
+                ? '<option value="">Selecione...</option>'
+                : '<option value="">Escolha a série primeiro</option>';
+            disciplinaSelect.disabled = !serie;
+
+            disciplinasFiltradas.forEach(disciplina => {
                 disciplinaSelect.innerHTML += `<option value="${disciplina.id}">${disciplina.name}</option>`;
             });
+
+            const aindaDisponivel = disciplinasFiltradas.some(
+                (disciplina) => String(disciplina.id) === String(selecionada)
+            );
+
+            if (selecionada && aindaDisponivel) {
+                disciplinaSelect.value = selecionada;
+                return;
+            }
+
+            disciplinaSelect.value = "";
+            carregarConteudos("");
+        }
+
+        function filtrarDisciplinasPorSerie(disciplinas, serie) {
+            if (!serie) return [];
+
+            const idsOcultosEnsinoFundamental = new Set(["2", "4", "5", "12", "13", "21"]);
+            const idsOcultosEnsinoMedio = new Set(["17", "19"]);
+            const ocultos = serie.startsWith("EF")
+                ? idsOcultosEnsinoFundamental
+                : idsOcultosEnsinoMedio;
+
+            return (disciplinas || []).filter(
+                (disciplina) => !ocultos.has(String(disciplina.id))
+            );
         }
 
         function escapeHtml(texto) {
@@ -685,7 +724,7 @@
                     if (professorField) professorField.classList.add('hidden');
                 }
 
-                if (profile.disciplina_preferida && disciplinaSelect) {
+                if (profile.disciplina_preferida && disciplinaSelect && serieSelect.value) {
                     disciplinaSelect.value = profile.disciplina_preferida;
                     await carregarConteudos(profile.disciplina_preferida);
                 }

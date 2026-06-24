@@ -265,11 +265,36 @@ class BernoulliClient:
                 self._log_response("questoes", data, origem="api_fallback", params=params, fetch_all=True, status_code=r.status_code)
                 return data
 
-        r = self._request(
-            "GET",
-            "https://api.bernoulli.com.br/api/banco-de-questoes/questions",
-            params=params
-        )
+        try:
+            r = self._request(
+                "GET",
+                "https://api.bernoulli.com.br/api/banco-de-questoes/questions",
+                params=params
+            )
+        except requests.HTTPError as e:
+            status_code = getattr(e.response, "status_code", None)
+            if status_code == 404:
+                data = {
+                    "data": [],
+                    "meta": {
+                        "total": "0",
+                        "page": page,
+                        "per_page": per_page,
+                        "total_pages": 0,
+                    }
+                }
+                self._log_response(
+                    "questoes",
+                    data,
+                    origem="api",
+                    params=params,
+                    fetch_all=False,
+                    status_code=status_code,
+                    sem_resultados=True,
+                )
+                return data
+
+            raise
 
         data = r.json()
         self._log_response("questoes", data, origem="api", params=params, fetch_all=False, status_code=r.status_code)

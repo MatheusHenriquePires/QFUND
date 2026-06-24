@@ -61,22 +61,14 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             
-                            <!-- Disciplina -->
-                            <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Disciplina <span class="text-red-500">*</span></label>
-                                <select id="disciplina" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                                    <option value="">Carregando...</option>
-                                </select>
-                            </div>
-
                             <!-- Série -->
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Série
+                                    Série <span class="text-red-500">*</span>
                                     <span class="ml-1 text-xs text-gray-400 font-normal">(filtra por nível)</span>
                                 </label>
-                                <select id="serie" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                                    <option value="">Todas as séries</option>
+                                <select id="serie" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                                    <option value="">Selecione...</option>
                                     <optgroup label="Ensino Fundamental I">
                                         <option value="EF1">1º ano</option>
                                         <option value="EF2">2º ano</option>
@@ -95,6 +87,14 @@
                                         <option value="EM2">2º ano EM</option>
                                         <option value="EM3">3º ano EM</option>
                                     </optgroup>
+                                </select>
+                            </div>
+
+                            <!-- Disciplina -->
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Disciplina <span class="text-red-500">*</span></label>
+                                <select id="disciplina" required disabled class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                    <option value="">Escolha a série primeiro</option>
                                 </select>
                             </div>
 
