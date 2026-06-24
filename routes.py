@@ -35,6 +35,25 @@ def listar_disciplinas():
     }
 
 
+@router.get("/conteudos/{disciplina_id}/contagens")
+def contar_questoes_por_conteudo(
+    disciplina_id: str,
+    serie: str | None = None,
+    dificuldade: str | None = None,
+    tipo: str | None = None
+):
+    try:
+        return conteudos_service.contar_questoes_por_conteudo(
+            disciplina_id=disciplina_id,
+            serie=serie,
+            dificuldade=dificuldade,
+            tipo=tipo,
+        )
+    except Exception as e:
+        logger.exception("Erro ao contar questões por conteúdo")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/conteudos/{disciplina_id}")
 def listar_conteudos(disciplina_id: str):
     return service.conteudos(disciplina_id)

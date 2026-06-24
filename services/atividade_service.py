@@ -187,6 +187,12 @@ class AtividadeService:
         preview = self._obter_previa(preview_id)
         meta = preview["meta"]
 
+        if not preview["questoes"]:
+            raise ValueError(
+                "Não há questões na prévia para gerar o PDF. "
+                "Ajuste os filtros e tente novamente."
+            )
+
         arquivo = self.pdf.gerar_atividade(
             questoes=preview["questoes"],
             disciplina=preview["disciplina"],

@@ -2,6 +2,7 @@
 
         const CACHE_KEY = 'disciplinas_cache';
         const CONTEUDOS_CACHE_PREFIX = 'conteudos_cache_';
+        const CONTAGENS_CACHE_PREFIX = 'contagens_conteudos_cache_';
         const CACHE_TTL = 1000 * 60 * 60;
 
         const disciplinaSelect = document.getElementById("disciplina");
@@ -33,6 +34,7 @@
         let conteudosExpandidos = new Set();
         let previewAtual = null;
         let disciplinasDisponiveis = [];
+        let contagensConteudos = null;
 
         // Mostrar/ocultar aviso de série
         serieSelect.addEventListener("change", () => {
@@ -182,6 +184,7 @@
                     caminho: [...caminho, nome].join(" > "),
                     caminhoIds: [...caminhoIds, String(conteudo.id)],
                     nivel,
+                    quantidadeQuestoes: null,
                     filhos: [],
                     descendentes: []
                 };
@@ -298,6 +301,9 @@
                             <span class="block text-sm font-semibold ${selecionado ? "text-blue-800" : "text-gray-800"}">${escapeHtml(conteudo.nome)}</span>
                             ${conteudo.grupo ? `<span class="block text-xs text-gray-500 mt-1">${escapeHtml(modoBusca ? conteudo.caminho : conteudo.grupo)}</span>` : ""}
                         </span>
+                        <span class="ml-auto shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${classeBadgeContagem(conteudo)}">
+                            ${textoBadgeContagem(conteudo)}
+                        </span>
                     </div>`;
 
                 button.addEventListener("click", (event) => {
@@ -361,6 +367,7 @@
             conteudosArvore = [];
             conteudosSelecionados = new Set();
             conteudosExpandidos = new Set();
+            contagensConteudos = null;
             buscarConteudo.value = "";
             setConteudosHabilitados(false);
             renderizarConteudos();
@@ -374,6 +381,9 @@
                     const parsed = JSON.parse(cached);
                     if (Date.now() - parsed.ts < CACHE_TTL) {
                         aplicarConteudos(parsed.data);
+                        carregarContagensConteudos(disciplinaId).catch((erro) => {
+                            registrarErro("Erro ao carregar contagens dos conteúdos", erro, { disciplinaId });
+                        });
                         return;
                     }
                 }
@@ -391,6 +401,9 @@
                 } catch (e) {}
 
                 aplicarConteudos(conteudos);
+                carregarContagensConteudos(disciplinaId).catch((erro) => {
+                    registrarErro("Erro ao carregar contagens dos conteúdos", erro, { disciplinaId });
+                });
             } catch (erro) {
                 registrarErro("Erro ao carregar conteúdos", erro, { disciplinaId });
                 setStatus(`<i class="fas fa-exclamation-circle"></i> ${textoErro(erro, "Erro ao carregar conteúdos.")}`, 'error');
@@ -404,6 +417,68 @@
             setConteudosHabilitados(conteudosDisponiveis.length > 0);
             atualizarSelectConteudos();
             renderizarConteudos();
+        }
+
+        async function carregarContagensConteudos(disciplinaId) {
+            if (!disciplinaId || !serieSelect.value) return;
+
+            const cacheKey = `${CONTAGENS_CACHE_PREFIX}${disciplinaId}_${serieSelect.value}`;
+            const cached = localStorage.getItem(cacheKey);
+
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Date.now() - parsed.ts < CACHE_TTL) {
+                    aplicarContagensConteudos(parsed.data.contagens || {});
+                    return;
+                }
+            }
+
+            contagensConteudos = null;
+            renderizarConteudos();
+
+            const params = new URLSearchParams({
+                serie: serieSelect.value
+            });
+            const data = await fetchJson(
+                `${API}/conteudos/${disciplinaId}/contagens?${params.toString()}`,
+                {},
+                "carregar quantidades por conteúdo"
+            );
+
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+            } catch (e) {}
+
+            aplicarContagensConteudos(data.contagens || {});
+        }
+
+        function aplicarContagensConteudos(contagens) {
+            contagensConteudos = contagens || {};
+
+            conteudosDisponiveis.forEach((conteudo) => {
+                conteudo.quantidadeQuestoes = Number(contagensConteudos[conteudo.id] || 0);
+            });
+
+            renderizarConteudos();
+        }
+
+        function textoBadgeContagem(conteudo) {
+            if (conteudo.quantidadeQuestoes === null || conteudo.quantidadeQuestoes === undefined) {
+                return "...";
+            }
+
+            const total = Number(conteudo.quantidadeQuestoes || 0);
+            return total === 1 ? "1 questão" : `${total} questões`;
+        }
+
+        function classeBadgeContagem(conteudo) {
+            if (conteudo.quantidadeQuestoes === null || conteudo.quantidadeQuestoes === undefined) {
+                return "bg-slate-100 text-slate-500";
+            }
+
+            return Number(conteudo.quantidadeQuestoes || 0) > 0
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-amber-50 text-amber-700";
         }
 
         disciplinaSelect.addEventListener("change", () => carregarConteudos(disciplinaSelect.value));
@@ -495,6 +570,9 @@
             previewProfessor.textContent = (data.meta && data.meta.professor) || "-";
             previewData.textContent = (data.meta && data.meta.data_avaliacao) || new Date().toLocaleDateString("pt-BR");
             previewSerie.textContent = formatarSerie((data.meta && data.meta.serie) || "");
+            previewGerarPdf.disabled = !data.questoes || !data.questoes.length;
+            previewGerarPdf.classList.toggle("opacity-50", previewGerarPdf.disabled);
+            previewGerarPdf.classList.toggle("cursor-not-allowed", previewGerarPdf.disabled);
 
             previewStats.innerHTML = `
                 ${avisosHtml}
@@ -522,7 +600,7 @@
             if (!data.questoes || !data.questoes.length) {
                 previewQuestoes.innerHTML = `
                     <div class="rounded-lg border border-amber-200 bg-amber-50 text-amber-800 p-4 text-sm">
-                        Nenhuma questão encontrada para esses filtros.
+                        Nenhuma questão encontrada para esses filtros. Ajuste a série, disciplina, conteúdo ou dificuldade para gerar o PDF.
                     </div>`;
                 return;
             }
@@ -609,6 +687,10 @@
 
         async function gerarPdfDaPreview() {
             if (!previewAtual) return;
+            if (!previewAtual.questoes || !previewAtual.questoes.length) {
+                alert("Não há questões na prévia para gerar o PDF.");
+                return;
+            }
 
             previewGerarPdf.disabled = true;
             previewGerarPdf.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
