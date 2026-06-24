@@ -51,15 +51,14 @@ class QuestaoFiltro:
 
         # dificuldade
         if dificuldade and dificuldade != "string":
+            dificuldade_normalizada = self.normalizar_texto(dificuldade)
 
             resultado = [
                 q
                 for q in resultado
-                if str(
-                    q.get("dificuldade", "")
-                ).lower()
+                if self.normalizar_texto(q.get("dificuldade", ""))
                 ==
-                str(dificuldade).lower()
+                dificuldade_normalizada
             ]
 
         # ano

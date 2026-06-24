@@ -8,8 +8,8 @@ import uuid
 
 class AtividadeService:
 
-    PER_PAGE_QUESTOES = 50
-    MAX_PAGINAS_QUESTOES = 12
+    PER_PAGE_QUESTOES = 100
+    MAX_PAGINAS_QUESTOES = 30
 
     def __init__(self):
         self.client = BernoulliClient()
@@ -70,7 +70,8 @@ class AtividadeService:
             conteudo=conteudo,
             incluir_gabarito=incluir_gabarito,
             professor=professor,
-            data_avaliacao=data_avaliacao
+            data_avaliacao=data_avaliacao,
+            serie=serie
         )
 
         return {
@@ -116,8 +117,9 @@ class AtividadeService:
             quantidade=len(candidatas)
         )
 
-        selecionadas = candidatas[:int(quantidade or 10)]
-        reserva = candidatas[int(quantidade or 10):]
+        quantidade_solicitada = int(quantidade or 10)
+        selecionadas = candidatas[:quantidade_solicitada]
+        reserva = candidatas[quantidade_solicitada:]
         preview_id = str(uuid.uuid4())
         disciplina_nome = self._nome_disciplina(disciplina_id)
 
@@ -128,7 +130,7 @@ class AtividadeService:
             "reserva": reserva,
             "meta": {
                 "disciplina_id": disciplina_id,
-                "quantidade": quantidade,
+                "quantidade": quantidade_solicitada,
                 "dificuldade": dificuldade,
                 "tipo": tipo,
                 "conteudo": conteudo,
@@ -193,6 +195,7 @@ class AtividadeService:
             incluir_gabarito=bool(meta.get("incluir_gabarito")),
             professor=meta.get("professor"),
             data_avaliacao=meta.get("data_avaliacao"),
+            serie=meta.get("serie"),
         )
 
         return {
@@ -217,14 +220,35 @@ class AtividadeService:
             "preview_id": preview_id,
             "disciplina": preview["disciplina"],
             "quantidade": len(questoes),
+            "quantidade_solicitada": int(preview["meta"].get("quantidade") or len(questoes)),
             "reservas": len(preview["reserva"]),
             "meta": preview["meta"],
+            "avisos": self._avisos_previa(preview),
             "estatisticas": self._estatisticas_questoes(questoes),
             "questoes": [
                 self._questao_preview(questao, index + 1)
                 for index, questao in enumerate(questoes)
             ],
         }
+
+    def _avisos_previa(self, preview):
+        avisos = []
+        quantidade_solicitada = int(
+            preview.get("meta", {}).get("quantidade") or 0
+        )
+        quantidade_encontrada = len(preview.get("questoes", []))
+
+        if quantidade_solicitada and quantidade_encontrada < quantidade_solicitada:
+            avisos.append({
+                "tipo": "quantidade_insuficiente",
+                "mensagem": (
+                    f"Foram encontradas apenas {quantidade_encontrada} "
+                    f"questões para os filtros escolhidos, de "
+                    f"{quantidade_solicitada} solicitadas."
+                )
+            })
+
+        return avisos
 
     def _questao_preview(self, questao, numero):
         return {
@@ -382,7 +406,10 @@ class AtividadeService:
                 disciplina=disciplina_id,
                 page=pagina,
                 per_page=self.PER_PAGE_QUESTOES,
-                fetch_all=False
+                fetch_all=False,
+                dificuldade=dificuldade,
+                tipo=tipo,
+                serie=serie
             )
 
             questoes_brutas = resposta.get("data", [])

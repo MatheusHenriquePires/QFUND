@@ -211,7 +211,12 @@ class BernoulliClient:
         page=1,
         per_page=20,
         disciplina=None,
-        fetch_all=False
+        fetch_all=False,
+        dificuldade=None,
+        tipo=None,
+        serie=None,
+        ano_origem=None,
+        fonte=None
     ):
 
         params = {
@@ -221,6 +226,24 @@ class BernoulliClient:
 
         if disciplina:
             params["subjects"] = disciplina
+
+        dificuldade_id = self._difficulty_id(dificuldade)
+        if dificuldade_id:
+            params["difficulties"] = dificuldade_id
+
+        tipo_api = self._question_type(tipo)
+        if tipo_api:
+            params["questionTypes"] = tipo_api
+
+        segmento_id = self._segment_id(serie)
+        if segmento_id:
+            params["segments"] = segmento_id
+
+        if ano_origem:
+            params["years"] = ano_origem
+
+        if fonte:
+            params["sources"] = fonte
 
         # Se solicitado, buscar todas as páginas de forma concorrente (async)
         if fetch_all:
@@ -251,6 +274,44 @@ class BernoulliClient:
         data = r.json()
         self._log_response("questoes", data, origem="api", params=params, fetch_all=False, status_code=r.status_code)
         return data
+
+    def _difficulty_id(self, dificuldade):
+        mapa = {
+            "facil": "1",
+            "fácil": "1",
+            "medio": "2",
+            "médio": "2",
+            "dificil": "3",
+            "difícil": "3",
+        }
+
+        return mapa.get(str(dificuldade or "").strip().lower())
+
+    def _question_type(self, tipo):
+        mapa = {
+            "objetiva": "Objetiva",
+            "discursiva": "Discursiva",
+        }
+
+        return mapa.get(str(tipo or "").strip().lower())
+
+    def _segment_id(self, serie):
+        mapa = {
+            "EF1": "0003",
+            "EF2": "0004",
+            "EF3": "0005",
+            "EF4": "0006",
+            "EF5": "0007",
+            "EF6": "0008",
+            "EF7": "0009",
+            "EF8": "0010",
+            "EF9": "0011",
+            "EM1": "0012",
+            "EM2": "0013",
+            "EM3": "0014",
+        }
+
+        return mapa.get(str(serie or "").strip().upper())
 
     async def _fetch_all_questions_async(self, disciplina, per_page=100, max_concurrency=8):
         import httpx

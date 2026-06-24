@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -11,6 +13,7 @@ from services.user_service import UserService
 
 conteudos_service = ConteudosService()
 router = APIRouter()
+logger = logging.getLogger("qfund.routes")
 
 service = AtividadeService()
 historico_service = HistoricoService()
@@ -73,7 +76,7 @@ def gerar_atividade(request: AtividadeRequest):
         responsavel = getattr(request, "professor", None)
         historico_service.add_record(tipo_usuario, nome_arquivo, meta, responsavel)
     except Exception:
-        pass
+        logger.exception("Erro ao salvar histórico da prévia")
 
     return FileResponse(
         arquivo,
@@ -99,6 +102,7 @@ def previsualizar_atividade(request: AtividadeRequest):
             tipo_usuario=request.tipo_usuario
         )
     except Exception as e:
+        logger.exception("Erro ao criar prévia da atividade")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -110,6 +114,7 @@ def trocar_questao_previa(request: PreviewActionRequest):
             questao_id=request.questao_id
         )
     except ValueError as e:
+        logger.warning("Erro ao trocar questão da prévia: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -121,6 +126,7 @@ def remover_questao_previa(request: PreviewActionRequest):
             questao_id=request.questao_id
         )
     except ValueError as e:
+        logger.warning("Erro ao remover questão da prévia: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -129,6 +135,7 @@ def gerar_atividade_preview(request: PreviewGenerateRequest):
     try:
         resultado = service.gerar_previa(request.preview_id)
     except ValueError as e:
+        logger.warning("Erro ao gerar PDF da prévia: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
 
     arquivo = resultado.get("arquivo")
@@ -142,7 +149,7 @@ def gerar_atividade_preview(request: PreviewGenerateRequest):
         responsavel = meta.get("professor")
         historico_service.add_record(tipo_usuario, nome_arquivo, meta, responsavel)
     except Exception:
-        pass
+        logger.exception("Erro ao salvar histórico da atividade")
 
     return FileResponse(
         arquivo,

@@ -68,7 +68,8 @@ class PDFGenerator:
         conteudo=None,
         incluir_gabarito=False,
         professor=None,
-        data_avaliacao=None
+        data_avaliacao=None,
+        serie=None
     ):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         arquivo = self.output_dir / f"atividade_{timestamp}.pdf"
@@ -77,6 +78,7 @@ class PDFGenerator:
         self._disciplina_resposta = self._normalizar_texto(disciplina)
         self._professor_cabecalho = str(professor or "CARLOS EDUARDO").upper()
         self._data_cabecalho = self._formatar_data_avaliacao(data_avaliacao)
+        self._serie_cabecalho = self._formatar_serie(serie)
 
         doc = BaseDocTemplate(
             str(arquivo),
@@ -449,7 +451,15 @@ class PDFGenerator:
         col4 = largura - col1 - col2 - col3 - (3 * gap)
 
         x = margem_x
-        self._campo_retangular(canvas, x, y_info, col1, 10 * mm, "ANO/SÉRIE/CURSO", "5EFI")
+        self._campo_retangular(
+            canvas,
+            x,
+            y_info,
+            col1,
+            10 * mm,
+            "ANO/SÉRIE/CURSO",
+            self._serie_cabecalho,
+        )
         x += col1 + gap
         self._campo_turno(canvas, x, y_info, col2, 10 * mm)
         x += col2 + gap
@@ -555,6 +565,24 @@ class PDFGenerator:
             return texto
 
         return datetime.now().strftime("%d/%m/%Y")
+
+    def _formatar_serie(self, serie):
+        mapa = {
+            "EF1": "1º ano",
+            "EF2": "2º ano",
+            "EF3": "3º ano",
+            "EF4": "4º ano",
+            "EF5": "5º ano",
+            "EF6": "6º ano",
+            "EF7": "7º ano",
+            "EF8": "8º ano",
+            "EF9": "9º ano",
+            "EM1": "1º ano EM",
+            "EM2": "2º ano EM",
+            "EM3": "3º ano EM",
+        }
+
+        return mapa.get(str(serie or "").strip(), str(serie or "").strip())
 
     def _desenhar_rodape(self, canvas, doc):
         margem_x = 12 * mm
