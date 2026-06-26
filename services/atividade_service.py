@@ -244,6 +244,83 @@ class AtividadeService:
 
         return self._preview_payload(preview_id)
 
+    def adicionar_questao_manual_previa(
+        self,
+        preview_id,
+        tipo,
+        enunciado,
+        alternativas=None,
+        gabarito=None,
+        conteudo=None,
+        dificuldade=None,
+    ):
+        preview = self._obter_previa(preview_id)
+        quantidade_solicitada = int(preview["meta"].get("quantidade") or 0)
+
+        if quantidade_solicitada and len(preview["questoes"]) >= quantidade_solicitada:
+            raise ValueError("A prévia já tem a quantidade solicitada de questões")
+
+        tipo = (tipo or "").strip().lower()
+        if tipo not in ("objetiva", "discursiva"):
+            raise ValueError("Escolha se a questão é objetiva ou discursiva")
+
+        enunciado = self._limpar_texto_manual(enunciado, limite=5000)
+        if not enunciado:
+            raise ValueError("Informe o enunciado da questão")
+
+        alternativas_formatadas = []
+        gabarito_formatado = None
+
+        if tipo == "objetiva":
+            alternativas_formatadas = self._formatar_alternativas_manuais(
+                alternativas or []
+            )
+            if len(alternativas_formatadas) < 2:
+                raise ValueError("Informe pelo menos duas alternativas")
+
+            letras_validas = "ABCDE"[:len(alternativas_formatadas)]
+            gabarito_formatado = (gabarito or "").strip().upper()
+            if gabarito_formatado not in letras_validas:
+                raise ValueError(
+                    f"Escolha um gabarito entre {', '.join(letras_validas)}"
+                )
+
+        questao = {
+            "id": f"manual:{uuid.uuid4()}",
+            "tipo": tipo,
+            "enunciado": enunciado,
+            "alternativas": alternativas_formatadas,
+            "gabarito": gabarito_formatado,
+            "imagens": [],
+            "conteudo": self._limpar_texto_manual(conteudo, limite=200) or "Criada pelo professor",
+            "dificuldade": self._limpar_texto_manual(dificuldade, limite=50) or "Manual",
+            "origem": "manual",
+        }
+
+        preview["questoes"].append(questao)
+        return self._preview_payload(preview_id)
+
+    def _limpar_texto_manual(self, texto, limite):
+        texto = str(texto or "").replace("\x00", "").strip()
+        texto = re.sub(r"\s+\n", "\n", texto)
+        texto = re.sub(r"\n{3,}", "\n\n", texto)
+        texto = re.sub(r"[ \t]{2,}", " ", texto)
+
+        return texto[:limite].strip()
+
+    def _formatar_alternativas_manuais(self, alternativas):
+        letras = "ABCDE"
+        textos = [
+            self._limpar_texto_manual(alternativa, limite=1000)
+            for alternativa in alternativas
+        ]
+        textos = [texto for texto in textos if texto][:5]
+
+        return [
+            f"{letras[indice]}) {texto}"
+            for indice, texto in enumerate(textos)
+        ]
+
     def gerar_previa(self, preview_id):
         preview = self._obter_previa(preview_id)
         meta = preview["meta"]

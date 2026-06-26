@@ -331,6 +331,85 @@
         </div>
     </div>
 
+    <div id="novaQuestaoModal" class="fixed inset-0 z-[60] hidden bg-slate-950/60 px-4 py-6">
+        <div class="h-full w-full flex items-center justify-center">
+            <div class="w-full max-w-2xl max-h-full overflow-y-auto rounded-lg bg-white shadow-xl border border-slate-200">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Criar questão</h2>
+                        <p class="text-sm text-slate-500 mt-1">A questão será adicionada apenas nesta prévia.</p>
+                    </div>
+                    <button type="button" id="novaQuestaoFechar" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="novaQuestaoForm" class="p-5 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
+                            <select id="novaQuestaoTipo" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 bg-white text-sm">
+                                <option value="objetiva">Objetiva</option>
+                                <option value="discursiva">Discursiva</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Dificuldade</label>
+                            <select id="novaQuestaoDificuldade" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 bg-white text-sm">
+                                <option value="Manual">Manual</option>
+                                <option value="Fácil">Fácil</option>
+                                <option value="Médio">Médio</option>
+                                <option value="Difícil">Difícil</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Conteúdo</label>
+                            <input type="text" id="novaQuestaoConteudo" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="Opcional">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Enunciado</label>
+                        <textarea id="novaQuestaoEnunciado" rows="5" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm resize-y" required></textarea>
+                    </div>
+
+                    <div id="novaQuestaoAlternativas" class="space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <label class="block text-sm font-medium text-slate-700">Alternativas</label>
+                            <select id="novaQuestaoGabarito" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white">
+                                <option value="">Gabarito</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2">
+                            <input type="text" data-alternativa="A" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="A)">
+                            <input type="text" data-alternativa="B" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="B)">
+                            <input type="text" data-alternativa="C" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="C)">
+                            <input type="text" data-alternativa="D" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="D)">
+                            <input type="text" data-alternativa="E" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="E)">
+                        </div>
+                    </div>
+
+                    <div id="novaQuestaoErro" class="hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
+
+                    <div class="flex justify-end gap-2 border-t border-slate-200 pt-4">
+                        <button type="button" id="novaQuestaoCancelar" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                            Cancelar
+                        </button>
+                        <button type="submit" id="novaQuestaoSalvar" class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-600">
+                            <i class="fas fa-plus"></i>
+                            Adicionar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/js/app.js"></script>
 </body>
 </html>

@@ -22,6 +22,16 @@ class PreviewActionRequest(BaseModel):
     tipo: Optional[str] = None
 
 
+class PreviewQuestionCreateRequest(BaseModel):
+    preview_id: str
+    tipo: str
+    enunciado: str
+    alternativas: Optional[List[str]] = []
+    gabarito: Optional[str] = None
+    conteudo: Optional[str] = None
+    dificuldade: Optional[str] = None
+
+
 class PreviewGenerateRequest(BaseModel):
     preview_id: str
 

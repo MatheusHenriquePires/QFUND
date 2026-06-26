@@ -5,7 +5,13 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 
 from services.atividade_service import AtividadeService
-from schemas import AtividadeRequest, PreviewActionRequest, PreviewGenerateRequest, UserProfile
+from schemas import (
+    AtividadeRequest,
+    PreviewActionRequest,
+    PreviewGenerateRequest,
+    PreviewQuestionCreateRequest,
+    UserProfile,
+)
 from services.conteudos_service import ConteudosService
 from services.historico_service import HistoricoService
 from services.user_service import UserService
@@ -147,6 +153,23 @@ def remover_questao_previa(request: PreviewActionRequest):
         )
     except ValueError as e:
         logger.warning("Erro ao remover questão da prévia: %s", e)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/previsualizar-atividade/adicionar")
+def adicionar_questao_previa(request: PreviewQuestionCreateRequest):
+    try:
+        return service.adicionar_questao_manual_previa(
+            preview_id=request.preview_id,
+            tipo=request.tipo,
+            enunciado=request.enunciado,
+            alternativas=request.alternativas,
+            gabarito=request.gabarito,
+            conteudo=request.conteudo,
+            dificuldade=request.dificuldade,
+        )
+    except ValueError as e:
+        logger.warning("Erro ao adicionar questão manual na prévia: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
 
 

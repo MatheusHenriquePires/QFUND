@@ -31,6 +31,19 @@
         const trocaQuestaoResumo = document.getElementById("trocaQuestaoResumo");
         const trocaQuestaoFechar = document.getElementById("trocaQuestaoFechar");
         const trocaTipoButtons = document.querySelectorAll(".troca-tipo");
+        const novaQuestaoModal = document.getElementById("novaQuestaoModal");
+        const novaQuestaoForm = document.getElementById("novaQuestaoForm");
+        const novaQuestaoFechar = document.getElementById("novaQuestaoFechar");
+        const novaQuestaoCancelar = document.getElementById("novaQuestaoCancelar");
+        const novaQuestaoTipo = document.getElementById("novaQuestaoTipo");
+        const novaQuestaoDificuldade = document.getElementById("novaQuestaoDificuldade");
+        const novaQuestaoConteudo = document.getElementById("novaQuestaoConteudo");
+        const novaQuestaoEnunciado = document.getElementById("novaQuestaoEnunciado");
+        const novaQuestaoAlternativas = document.getElementById("novaQuestaoAlternativas");
+        const novaQuestaoGabarito = document.getElementById("novaQuestaoGabarito");
+        const novaQuestaoErro = document.getElementById("novaQuestaoErro");
+        const novaQuestaoSalvar = document.getElementById("novaQuestaoSalvar");
+        const novaAlternativas = document.querySelectorAll(".nova-alternativa");
 
         let conteudosDisponiveis = [];
         let conteudosArvore = [];
@@ -547,6 +560,7 @@
         function fecharPreviewModal() {
             previewModal.classList.add("hidden");
             fecharTrocaQuestaoModal();
+            fecharNovaQuestaoModal();
             document.body.classList.remove("overflow-hidden");
         }
 
@@ -561,6 +575,52 @@
             trocaQuestaoModal.classList.add("hidden");
         }
 
+        function abrirNovaQuestaoModal() {
+            novaQuestaoForm.reset();
+            novaQuestaoErro.classList.add("hidden");
+            novaQuestaoErro.textContent = "";
+            novaQuestaoTipo.value = (previewAtual && previewAtual.meta && previewAtual.meta.tipo) || "objetiva";
+            novaQuestaoDificuldade.value = (previewAtual && previewAtual.meta && previewAtual.meta.dificuldade) || "Manual";
+            alternarCamposNovaQuestao();
+            novaQuestaoModal.classList.remove("hidden");
+            novaQuestaoEnunciado.focus();
+        }
+
+        function fecharNovaQuestaoModal() {
+            novaQuestaoModal.classList.add("hidden");
+        }
+
+        function alternarCamposNovaQuestao() {
+            const objetiva = novaQuestaoTipo.value === "objetiva";
+            novaQuestaoAlternativas.classList.toggle("hidden", !objetiva);
+            novaAlternativas.forEach((input, index) => {
+                input.required = objetiva && index < 2;
+            });
+            novaQuestaoGabarito.required = objetiva;
+        }
+
+        function mostrarErroNovaQuestao(mensagem) {
+            novaQuestaoErro.textContent = mensagem;
+            novaQuestaoErro.classList.remove("hidden");
+        }
+
+        function montarPayloadNovaQuestao() {
+            const tipo = novaQuestaoTipo.value;
+            const alternativas = Array.from(novaAlternativas)
+                .map((input) => input.value.trim())
+                .filter(Boolean);
+
+            return {
+                preview_id: previewAtual.preview_id,
+                tipo,
+                enunciado: novaQuestaoEnunciado.value.trim(),
+                alternativas: tipo === "objetiva" ? alternativas : [],
+                gabarito: tipo === "objetiva" ? novaQuestaoGabarito.value : null,
+                conteudo: novaQuestaoConteudo.value.trim() || null,
+                dificuldade: novaQuestaoDificuldade.value || null
+            };
+        }
+
         function renderizarPreview(data) {
             previewAtual = data;
             abrirPreviewModal();
@@ -571,6 +631,7 @@
                 .join("<br>");
 
             const quantidadeSolicitada = data.quantidade_solicitada || (data.meta && data.meta.quantidade) || data.quantidade;
+            const faltantes = Math.max(quantidadeSolicitada - data.quantidade, 0);
             const avisos = data.avisos || [];
             const avisosHtml = avisos
                 .map((aviso) => `
@@ -580,6 +641,16 @@
                     </div>
                 `)
                 .join("");
+            const criarQuestaoHtml = faltantes > 0 ? `
+                <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                    <div class="font-bold">Completar avaliação</div>
+                    <div class="mt-1 text-emerald-800">Faltam ${faltantes} questão${faltantes > 1 ? "ões" : ""} para chegar ao total solicitado.</div>
+                    <button type="button" class="criar-questao-manual mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-600">
+                        <i class="fas fa-plus"></i>
+                        Criar questão
+                    </button>
+                </div>
+            ` : "";
 
             previewResumo.textContent = `${data.quantidade} de ${quantidadeSolicitada} questões na prévia · ${data.reservas || 0} reservas para troca`;
             previewTitulo.textContent = ((data.meta && data.meta.titulo) || "Atividade").toUpperCase();
@@ -593,6 +664,7 @@
 
             previewStats.innerHTML = `
                 ${avisosHtml}
+                ${criarQuestaoHtml}
                 <div class="rounded-lg border border-slate-200 p-4">
                     <div class="text-xs font-bold text-slate-500 uppercase">Resumo</div>
                     <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
@@ -611,6 +683,10 @@
                     ${stats.com_imagem || 0} questões com imagem
                 </div>
             `;
+            const criarQuestaoButton = previewStats.querySelector(".criar-questao-manual");
+            if (criarQuestaoButton) {
+                criarQuestaoButton.addEventListener("click", abrirNovaQuestaoModal);
+            }
 
             previewQuestoes.innerHTML = "";
 
@@ -707,6 +783,50 @@
             }
         }
 
+        async function adicionarQuestaoManual(event) {
+            event.preventDefault();
+            if (!previewAtual) return;
+
+            const payload = montarPayloadNovaQuestao();
+            if (!payload.enunciado) {
+                mostrarErroNovaQuestao("Informe o enunciado da questão.");
+                return;
+            }
+
+            if (payload.tipo === "objetiva") {
+                if (payload.alternativas.length < 2) {
+                    mostrarErroNovaQuestao("Informe pelo menos duas alternativas.");
+                    return;
+                }
+
+                if (!payload.gabarito) {
+                    mostrarErroNovaQuestao("Escolha o gabarito da questão objetiva.");
+                    return;
+                }
+            }
+
+            novaQuestaoSalvar.disabled = true;
+            novaQuestaoSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adicionando...';
+            novaQuestaoErro.classList.add("hidden");
+
+            try {
+                const data = await fetchJson(`${API}/previsualizar-atividade/adicionar`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                }, "adicionar questão manual");
+
+                fecharNovaQuestaoModal();
+                renderizarPreview(data);
+            } catch (erro) {
+                registrarErro("Erro ao adicionar questão manual", erro, payload);
+                mostrarErroNovaQuestao(textoErro(erro, "Não consegui adicionar essa questão."));
+            } finally {
+                novaQuestaoSalvar.disabled = false;
+                novaQuestaoSalvar.innerHTML = '<i class="fas fa-plus"></i> Adicionar';
+            }
+        }
+
         async function gerarPdfDaPreview() {
             if (!previewAtual) return;
             if (!previewAtual.questoes || !previewAtual.questoes.length) {
@@ -755,6 +875,13 @@
                 if (!trocaQuestaoId) return;
                 trocarQuestaoPreview(trocaQuestaoId, button.dataset.tipo);
             });
+        });
+        novaQuestaoFechar.addEventListener("click", fecharNovaQuestaoModal);
+        novaQuestaoCancelar.addEventListener("click", fecharNovaQuestaoModal);
+        novaQuestaoTipo.addEventListener("change", alternarCamposNovaQuestao);
+        novaQuestaoForm.addEventListener("submit", adicionarQuestaoManual);
+        novaQuestaoModal.addEventListener("click", (event) => {
+            if (!event.target.closest || !event.target.closest(".max-w-2xl")) fecharNovaQuestaoModal();
         });
 
         form.addEventListener("submit", async function (e) {
