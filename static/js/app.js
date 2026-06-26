@@ -27,12 +27,17 @@
         const previewProfessor = document.getElementById("previewProfessor");
         const previewData = document.getElementById("previewData");
         const previewSerie = document.getElementById("previewSerie");
+        const trocaQuestaoModal = document.getElementById("trocaQuestaoModal");
+        const trocaQuestaoResumo = document.getElementById("trocaQuestaoResumo");
+        const trocaQuestaoFechar = document.getElementById("trocaQuestaoFechar");
+        const trocaTipoButtons = document.querySelectorAll(".troca-tipo");
 
         let conteudosDisponiveis = [];
         let conteudosArvore = [];
         let conteudosSelecionados = new Set();
         let conteudosExpandidos = new Set();
         let previewAtual = null;
+        let trocaQuestaoId = null;
         let disciplinasDisponiveis = [];
         let contagensConteudos = null;
 
@@ -541,7 +546,19 @@
 
         function fecharPreviewModal() {
             previewModal.classList.add("hidden");
+            fecharTrocaQuestaoModal();
             document.body.classList.remove("overflow-hidden");
+        }
+
+        function abrirTrocaQuestaoModal(questao) {
+            trocaQuestaoId = questao.id;
+            trocaQuestaoResumo.textContent = `Questão ${questao.numero}: escolha o tipo da nova questão.`;
+            trocaQuestaoModal.classList.remove("hidden");
+        }
+
+        function fecharTrocaQuestaoModal() {
+            trocaQuestaoId = null;
+            trocaQuestaoModal.classList.add("hidden");
         }
 
         function renderizarPreview(data) {
@@ -644,21 +661,26 @@
                     ${questao.tipo === "discursiva" ? "<div class='mt-4 space-y-3'><div class='border-b border-slate-300 h-5'></div><div class='border-b border-slate-300 h-5'></div><div class='border-b border-slate-300 h-5'></div></div>" : ""}
                 `;
 
-                card.querySelector(".trocar-questao").addEventListener("click", () => trocarQuestaoPreview(questao.id));
+                card.querySelector(".trocar-questao").addEventListener("click", () => abrirTrocaQuestaoModal(questao));
                 card.querySelector(".remover-questao").addEventListener("click", () => removerQuestaoPreview(questao.id));
                 previewQuestoes.appendChild(card);
             });
         }
 
-        async function trocarQuestaoPreview(questaoId) {
+        async function trocarQuestaoPreview(questaoId, tipo) {
             if (!previewAtual) return;
 
             try {
-                previewResumo.textContent = "Trocando questão...";
+                fecharTrocaQuestaoModal();
+                previewResumo.textContent = `Trocando por questão ${tipo}...`;
                 const data = await fetchJson(`${API}/previsualizar-atividade/trocar`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ preview_id: previewAtual.preview_id, questao_id: questaoId })
+                    body: JSON.stringify({
+                        preview_id: previewAtual.preview_id,
+                        questao_id: questaoId,
+                        tipo
+                    })
                 }, "trocar questão");
 
                 renderizarPreview(data);
@@ -724,6 +746,16 @@
 
         previewFechar.addEventListener("click", fecharPreviewModal);
         previewGerarPdf.addEventListener("click", gerarPdfDaPreview);
+        trocaQuestaoFechar.addEventListener("click", fecharTrocaQuestaoModal);
+        trocaQuestaoModal.addEventListener("click", (event) => {
+            if (!event.target.closest || !event.target.closest(".max-w-md")) fecharTrocaQuestaoModal();
+        });
+        trocaTipoButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                if (!trocaQuestaoId) return;
+                trocarQuestaoPreview(trocaQuestaoId, button.dataset.tipo);
+            });
+        });
 
         form.addEventListener("submit", async function (e) {
             e.preventDefault();

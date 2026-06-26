@@ -130,7 +130,8 @@ def trocar_questao_previa(request: PreviewActionRequest):
     try:
         return service.trocar_questao_previa(
             preview_id=request.preview_id,
-            questao_id=request.questao_id
+            questao_id=request.questao_id,
+            tipo=request.tipo
         )
     except ValueError as e:
         logger.warning("Erro ao trocar questão da prévia: %s", e)

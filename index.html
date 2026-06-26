@@ -293,6 +293,44 @@
         </div>
     </div>
 
+    <div id="trocaQuestaoModal" class="fixed inset-0 z-[60] hidden bg-slate-950/60 px-4 py-6">
+        <div class="h-full w-full flex items-center justify-center">
+            <div class="w-full max-w-md rounded-lg bg-white shadow-xl border border-slate-200">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Trocar questão</h2>
+                        <p id="trocaQuestaoResumo" class="text-sm text-slate-500 mt-1">Escolha o tipo da nova questão.</p>
+                    </div>
+                    <button type="button" id="trocaQuestaoFechar" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="p-5 space-y-3">
+                    <button type="button" data-tipo="objetiva" class="troca-tipo w-full flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-left hover:border-blue-300 hover:bg-blue-50">
+                        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+                            <i class="fas fa-list-ul"></i>
+                        </span>
+                        <span>
+                            <span class="block font-bold text-slate-900">Objetiva</span>
+                            <span class="block text-sm text-slate-500">Questão com alternativas.</span>
+                        </span>
+                    </button>
+
+                    <button type="button" data-tipo="discursiva" class="troca-tipo w-full flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-left hover:border-blue-300 hover:bg-blue-50">
+                        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                            <i class="fas fa-pen-to-square"></i>
+                        </span>
+                        <span>
+                            <span class="block font-bold text-slate-900">Discursiva</span>
+                            <span class="block text-sm text-slate-500">Questão com resposta escrita.</span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/js/app.js"></script>
 </body>
 </html>

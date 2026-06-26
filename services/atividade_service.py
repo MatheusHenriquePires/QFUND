@@ -145,7 +145,7 @@ class AtividadeService:
 
         return self._preview_payload(preview_id)
 
-    def trocar_questao_previa(self, preview_id, questao_id):
+    def trocar_questao_previa(self, preview_id, questao_id, tipo=None):
         preview = self._obter_previa(preview_id)
         questoes = preview["questoes"]
         reserva = preview["reserva"]
@@ -162,14 +162,75 @@ class AtividadeService:
         if indice is None:
             raise ValueError("Questão não encontrada na prévia")
 
-        if not reserva:
+        tipo = (tipo or "").strip().lower() or None
+        if tipo and tipo not in ("objetiva", "discursiva"):
+            raise ValueError("Tipo de questão inválido")
+
+        reserva_indice = self._indice_reserva_por_tipo(reserva, tipo)
+        substituta = None
+
+        if reserva_indice is not None:
+            substituta = reserva.pop(reserva_indice)
+        elif tipo:
+            substituta = self._buscar_substituta_previa(preview, tipo)
+
+        if not substituta:
+            if tipo:
+                raise ValueError(
+                    f"Não há questão {tipo} disponível para troca com esses filtros"
+                )
             raise ValueError("Não há questões reservas para troca")
 
-        substituta = reserva.pop(0)
         reserva.append(questoes[indice])
         questoes[indice] = substituta
 
         return self._preview_payload(preview_id)
+
+    def _indice_reserva_por_tipo(self, reserva, tipo=None):
+        if not reserva:
+            return None
+
+        if not tipo:
+            return 0
+
+        for indice, questao in enumerate(reserva):
+            if (questao.get("tipo") or "").strip().lower() == tipo:
+                return indice
+
+        return None
+
+    def _buscar_substituta_previa(self, preview, tipo):
+        meta = preview["meta"]
+        conteudo_filtro = self._resolver_conteudos_para_filtro(
+            preview["disciplina_id"],
+            meta.get("conteudo")
+        )
+
+        ids_usados = {
+            str(questao.get("id"))
+            for questao in [*preview["questoes"], *preview["reserva"]]
+            if questao.get("id") is not None
+        }
+
+        candidatas = self._buscar_questoes_filtradas(
+            disciplina_id=preview["disciplina_id"],
+            quantidade=self.PER_PAGE_QUESTOES,
+            conteudo=conteudo_filtro,
+            dificuldade=meta.get("dificuldade"),
+            tipo=tipo,
+            serie=meta.get("serie"),
+        )
+
+        candidatas = self.filtro.selecionar(
+            [
+                questao
+                for questao in candidatas
+                if str(questao.get("id")) not in ids_usados
+            ],
+            quantidade=len(candidatas)
+        )
+
+        return candidatas[0] if candidatas else None
 
     def remover_questao_previa(self, preview_id, questao_id):
         preview = self._obter_previa(preview_id)

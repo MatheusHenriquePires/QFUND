@@ -19,6 +19,7 @@ class AtividadeRequest(BaseModel):
 class PreviewActionRequest(BaseModel):
     preview_id: str
     questao_id: Union[str, int]
+    tipo: Optional[str] = None
 
 
 class PreviewGenerateRequest(BaseModel):
