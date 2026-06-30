@@ -10,6 +10,10 @@ class QuestaoParser:
         r"^[A-E]\)",
         re.IGNORECASE
     )
+    CREDITO_IMAGEM_REGEX = re.compile(
+        r"Dispon.vel\s+em\s*:\s*.*?Acesso\s+em\s*:\s*\d{1,2}\s+[^\s.]+\.?\s+\d{4}\.?",
+        re.IGNORECASE | re.DOTALL
+    )
 
     def limpar_html(self, html):
 
@@ -75,7 +79,27 @@ class QuestaoParser:
 
         return "\n".join(enunciado)
 
-    def detectar_tipo(self, alternativas):
+    def separar_creditos_imagem(self, texto):
+        creditos = [
+            self._normalizar_espacos(match.group(0))
+            for match in self.CREDITO_IMAGEM_REGEX.finditer(texto or "")
+        ]
+
+        texto_sem_creditos = self.CREDITO_IMAGEM_REGEX.sub("", texto or "")
+        texto_sem_creditos = re.sub(r"\n{2,}", "\n", texto_sem_creditos)
+
+        return texto_sem_creditos.strip(), creditos
+
+    def _normalizar_espacos(self, texto):
+        return re.sub(r"\s+", " ", str(texto or "")).strip()
+
+    def detectar_tipo(self, alternativas, tipo_api=None):
+
+        tipo_normalizado = str(tipo_api or "").strip().lower()
+        if tipo_normalizado == "objetiva":
+            return "objetiva"
+        if tipo_normalizado == "discursiva":
+            return "discursiva"
 
         if len(alternativas) >= 2:
             return "objetiva"
@@ -101,14 +125,18 @@ class QuestaoParser:
                 imagens.append(src)
 
         texto = self.limpar_html(html)
+        texto, creditos_imagem = self.separar_creditos_imagem(texto)
 
         alternativas = self.extrair_alternativas(
             texto
         )
 
         tipo = self.detectar_tipo(
-            alternativas
+            alternativas,
+            questao.get("questionType"),
         )
+
+        dificuldade = self._normalizar_dificuldade(questao.get("difficulty"))
 
         return {
             "id": questao.get("id"),
@@ -136,9 +164,7 @@ class QuestaoParser:
                 "year"
             ),
 
-            "dificuldade": questao.get(
-                "difficulty"
-            ),
+            "dificuldade": dificuldade,
 
             "origem": questao.get(
                 "source"
@@ -152,9 +178,29 @@ class QuestaoParser:
                 "knowledgeArea"
             ),
 
+            "habilidade": questao.get("skill"),
+
+            "tipo_api": questao.get("questionType"),
+
+            "resposta_esperada": self.limpar_html(questao.get("answer", "")),
+
             "keywords": questao.get(
                 "keywords"
             ),
 
-            "imagens": imagens
+            "tags": questao.get("tags") or [],
+
+            "raw": questao,
+
+            "imagens": imagens,
+            "creditos_imagem": creditos_imagem
         }
+
+    def _normalizar_dificuldade(self, dificuldade):
+        mapa = {
+            "facil": "Fácil", "fácil": "Fácil",
+            "medio": "Médio", "médio": "Médio",
+            "dificil": "Difícil", "difícil": "Difícil",
+        }
+        valor = str(dificuldade or "").strip()
+        return mapa.get(valor.lower(), valor or "Não informada")

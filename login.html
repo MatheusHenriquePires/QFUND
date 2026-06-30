@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrar | QFund</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { 50:'#EEF3FF',100:'#DCE7FF',400:'#3D7BFF',500:'#0B52E8',600:'#0843C2',700:'#063494' },
+          ink: '#0F1A36',
+        },
+        fontFamily: {
+          display: ['Sora','sans-serif'],
+          sans: ['Inter','sans-serif'],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { background:#F4F7FF; }
+
+  /* animated gradient mesh */
+  .mesh {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18), transparent 40%),
+      radial-gradient(circle at 80% 15%, rgba(61,123,255,0.55), transparent 45%),
+      radial-gradient(circle at 70% 80%, rgba(8,67,194,0.65), transparent 50%),
+      linear-gradient(135deg, #0B52E8 0%, #063494 100%);
+  }
+
+  .blob {
+    position:absolute;
+    border-radius:9999px;
+    filter:blur(0px);
+    opacity:.5;
+    animation: float 14s ease-in-out infinite;
+  }
+  .blob.b1{ width:420px;height:420px; background:radial-gradient(circle,#3D7BFF,transparent 70%); top:-120px; right:-140px; animation-delay:0s;}
+  .blob.b2{ width:300px;height:300px; background:radial-gradient(circle,#7DA8FF,transparent 70%); bottom:-100px; left:-80px; animation-delay:-5s;}
+  .blob.b3{ width:200px;height:200px; background:radial-gradient(circle,#A9C6FF,transparent 70%); bottom:30%; right:10%; animation-delay:-9s;}
+
+  @keyframes float {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px,-26px) scale(1.06); }
+  }
+
+  .grid-overlay{
+    background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+
+  /* floating glass cards */
+  .glass-card{
+    background: rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 20px 40px -16px rgba(6,52,148,0.45);
+    animation: bob 6s ease-in-out infinite;
+  }
+  .glass-card.delay { animation-delay: -3s; }
+  @keyframes bob {
+    0%,100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* form */
+  .field {
+    transition: box-shadow .2s ease, border-color .2s ease, transform .15s ease;
+  }
+  .field:focus-within {
+    border-color: #3D7BFF;
+    box-shadow: 0 0 0 4px rgba(61,123,255,0.15);
+  }
+  .field input, .field select { background: transparent; }
+
+  .cta {
+    background: linear-gradient(135deg, #0B52E8, #063494);
+    transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+    box-shadow: 0 12px 24px -10px rgba(11,82,232,0.55);
+  }
+  .cta:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(11,82,232,0.65); }
+  .cta:active { transform: translateY(0px) scale(0.99); }
+
+  .fade-in { animation: fadeIn .6s ease both; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blob, .glass-card, .fade-in { animation: none !important; }
+  }
+
+  /* light dynamic background for the form side */
+  .panel-bg {
+    position: relative;
+    background:
+      radial-gradient(circle at 85% 8%, rgba(61,123,255,0.16), transparent 42%),
+      radial-gradient(circle at 8% 85%, rgba(11,82,232,0.10), transparent 45%),
+      #F4F7FF;
+    overflow: hidden;
+  }
+  .panel-bg .dotgrid {
+    position:absolute; inset:0;
+    background-image: radial-gradient(rgba(11,82,232,0.14) 1.4px, transparent 1.4px);
+    background-size: 26px 26px;
+    -webkit-mask-image: radial-gradient(circle at 70% 30%, black 0%, transparent 65%);
+    mask-image: radial-gradient(circle at 70% 30%, black 0%, transparent 65%);
+    pointer-events:none;
+  }
+  .panel-bg .soft-blob {
+    position:absolute; border-radius:9999px;
+    animation: float 16s ease-in-out infinite;
+  }
+  .panel-bg .sb1 { width:340px; height:340px; background: radial-gradient(circle, rgba(61,123,255,0.20), transparent 70%); top:-90px; right:-60px; }
+  .panel-bg .sb2 { width:260px; height:260px; background: radial-gradient(circle, rgba(11,82,232,0.14), transparent 70%); bottom:-60px; left:-60px; animation-delay:-7s; }
+  .panel-bg .ring {
+    position:absolute; border-radius:9999px; border:1px solid rgba(11,82,232,0.10);
+    pointer-events:none;
+  }
+  .panel-bg .r1 { width:520px; height:520px; top:-180px; right:-200px; }
+  .panel-bg .r2 { width:380px; height:380px; top:-110px; right:-130px; }
+</style>
+</head>
+<body class="min-h-screen text-ink font-sans">
+  <main class="min-h-screen grid lg:grid-cols-2">
+
+    <!-- LEFT: dynamic brand panel -->
+    <section class="hidden lg:flex relative overflow-hidden mesh text-white p-14 flex-col justify-between">
+      <div class="absolute inset-0 grid-overlay pointer-events-none"></div>
+      <div class="blob b1"></div>
+      <div class="blob b2"></div>
+      <div class="blob b3"></div>
+
+      <div class="relative z-10 flex items-center gap-2.5 font-display font-bold text-xl">
+        <span class="w-9 h-9 rounded-xl bg-white/15 border border-white/25 grid place-items-center">
+          <i class="fas fa-layer-group text-base"></i>
+        </span>
+        QFund
+      </div>
+
+      <div class="relative z-10 max-w-xl">
+        <p class="text-brand-100/90 font-semibold uppercase tracking-[.22em] text-xs mb-4 flex items-center gap-2">
+          <span class="w-6 h-px bg-white/50"></span> Banco de atividades
+        </p>
+        <h1 class="font-display text-5xl font-bold leading-[1.08] tracking-tight">
+          Questões, imagens e atividades em um só lugar.
+        </h1>
+        <p class="text-blue-100/85 text-lg mt-6 max-w-md leading-relaxed">
+          Entre para montar avaliações e acessar seu histórico com segurança.
+        </p>
+
+        <!-- floating mock UI cards: dynamic, modern touch -->
+        <div class="relative mt-12 h-40">
+          <div class="glass-card absolute left-0 top-2 w-60 rounded-2xl p-4">
+            <div class="flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-circle-check text-emerald-300"></i> Atividade gerada
+            </div>
+            <p class="text-xs text-white/70 mt-1">32 questões · 4ª série · Matemática</p>
+          </div>
+          <div class="glass-card delay absolute left-24 top-20 w-52 rounded-2xl p-4">
+            <div class="flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-folder-open text-yellow-300"></i> Banco de questões
+            </div>
+            <p class="text-xs text-white/70 mt-1">+1.200 itens disponíveis</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="relative z-10 text-sm text-blue-100/70">QFund · Gerador de atividades escolares</p>
+    </section>
+
+    <!-- RIGHT: form -->
+    <section class="flex items-center justify-center p-6 sm:p-12 panel-bg">
+      <div class="dotgrid"></div>
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="soft-blob sb1"></div>
+      <div class="soft-blob sb2"></div>
+      <div class="w-full max-w-md fade-in relative z-10">
+
+        <div class="lg:hidden text-brand-600 text-2xl font-display font-bold flex items-center gap-2 mb-10">
+          <span class="w-9 h-9 rounded-xl bg-brand-50 border border-brand-100 grid place-items-center text-brand-500">
+            <i class="fas fa-layer-group text-base"></i>
+          </span>
+          QFund
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-[0_20px_50px_-24px_rgba(11,82,232,0.25)] p-8 sm:p-10">
+          <h2 id="formTitle" class="font-display text-3xl font-bold text-ink">Boas-vindas</h2>
+          <p id="formSubtitle" class="text-slate-500 mt-2 mb-8">Entre na sua conta para continuar.</p>
+
+          <form id="authForm" class="space-y-5">
+            <div id="nameGroup" class="hidden">
+              <label class="block text-sm font-semibold mb-2 text-slate-700" for="nome">Nome</label>
+              <div class="field flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
+                <i class="fa-regular fa-user text-slate-400"></i>
+                <input id="nome" autocomplete="name" class="w-full outline-none text-[15px]" placeholder="Seu nome">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-slate-700" for="email">E-mail</label>
+              <div class="field flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
+                <i class="fa-regular fa-envelope text-slate-400"></i>
+                <input id="email" type="email" required autocomplete="email" class="w-full outline-none text-[15px]" placeholder="voce@escola.com">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-slate-700" for="senha">Senha</label>
+              <div class="field flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
+                <i class="fa-solid fa-lock text-slate-400"></i>
+                <input id="senha" type="password" required minlength="8" autocomplete="current-password" class="w-full outline-none text-[15px]" placeholder="Mínimo de 8 caracteres">
+                <button type="button" id="toggleSenha" class="text-slate-400 hover:text-brand-500 text-sm">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div id="roleGroup" class="hidden">
+              <label class="block text-sm font-semibold mb-2 text-slate-700" for="tipo">Perfil</label>
+              <div class="field flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
+                <i class="fa-solid fa-chalkboard-user text-slate-400"></i>
+                <select id="tipo" class="w-full outline-none text-[15px] bg-transparent">
+                  <option value="professor">Professor</option>
+                  <option value="usuario">Usuário</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="error" class="hidden rounded-2xl bg-red-50 border border-red-100 text-red-600 px-4 py-3 text-sm font-medium flex items-center gap-2">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              <span id="errorText"></span>
+            </div>
+
+            <button id="submitButton" type="submit" class="cta w-full rounded-2xl text-white font-bold py-3.5 flex items-center justify-center gap-2">
+              <span id="btnLabel">Entrar</span>
+              <i class="fa-solid fa-arrow-right text-sm"></i>
+            </button>
+          </form>
+
+          <p class="text-center text-sm text-slate-500 mt-7">
+            <span id="toggleText">Ainda não tem uma conta?</span>
+            <button id="toggleMode" type="button" class="text-brand-500 font-bold hover:underline">Cadastre-se</button>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+<script>
+  let registering = false;
+  const form = document.getElementById('authForm');
+  const errorBox = document.getElementById('error');
+  const errorText = document.getElementById('errorText');
+
+  document.getElementById('toggleSenha').addEventListener('click', () => {
+    const senha = document.getElementById('senha');
+    const icon = document.querySelector('#toggleSenha i');
+    const show = senha.type === 'password';
+    senha.type = show ? 'text' : 'password';
+    icon.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+  });
+
+  document.getElementById('toggleMode').addEventListener('click', () => {
+    registering = !registering;
+    document.getElementById('nameGroup').classList.toggle('hidden', !registering);
+    document.getElementById('roleGroup').classList.toggle('hidden', !registering);
+    document.getElementById('formTitle').textContent = registering ? 'Crie sua conta' : 'Boas-vindas';
+    document.getElementById('formSubtitle').textContent = registering ? 'Seus dados ficam vinculados ao seu acesso.' : 'Entre na sua conta para continuar.';
+    document.getElementById('btnLabel').textContent = registering ? 'Criar conta' : 'Entrar';
+    document.getElementById('toggleText').textContent = registering ? 'Já possui uma conta?' : 'Ainda não tem uma conta?';
+    document.getElementById('toggleMode').textContent = registering ? 'Entrar' : 'Cadastre-se';
+    document.getElementById('senha').autocomplete = registering ? 'new-password' : 'current-password';
+    errorBox.classList.add('hidden');
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = document.getElementById('submitButton');
+    const btnLabel = document.getElementById('btnLabel');
+    const payload = {
+      email: document.getElementById('email').value.trim(),
+      senha: document.getElementById('senha').value
+    };
+    if (registering) {
+      payload.nome = document.getElementById('nome').value.trim();
+      payload.tipo = document.getElementById('tipo').value;
+    }
+    button.disabled = true;
+    const originalLabel = btnLabel.textContent;
+    btnLabel.textContent = 'Aguarde...';
+    errorBox.classList.add('hidden');
+    try {
+      const response = await fetch(registering ? '/auth/cadastro' : '/auth/login', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.detail || 'Não foi possível entrar.');
+      window.location.href = '/app';
+    } catch (error) {
+      errorText.textContent = error.message;
+      errorBox.classList.remove('hidden');
+      button.disabled = false;
+      btnLabel.textContent = originalLabel;
+    }
+  });
+</script>
+</body>
+</html>

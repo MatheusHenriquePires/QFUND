@@ -4,6 +4,8 @@ from services.filtros import QuestaoFiltro
 from services.pdf_generator import PDFGenerator
 import re
 import uuid
+from database import db
+from services.question_persistence_service import question_persistence_service
 
 
 class AtividadeService:
@@ -61,6 +63,8 @@ class AtividadeService:
             quantidade=quantidade
         )
 
+        question_persistence_service.enqueue(questoes, disciplina_id, serie)
+
         disciplina_nome = self._nome_disciplina(disciplina_id)
 
         arquivo = self.pdf.gerar_atividade(
@@ -92,7 +96,8 @@ class AtividadeService:
         professor=None,
         data_avaliacao=None,
         serie=None,
-        tipo_usuario=None
+        tipo_usuario=None,
+        user_id=None,
     ):
         if conteudo == []:
             conteudo = None
@@ -120,10 +125,16 @@ class AtividadeService:
         quantidade_solicitada = int(quantidade or 10)
         selecionadas = candidatas[:quantidade_solicitada]
         reserva = candidatas[quantidade_solicitada:]
+
+        # Questões e imagens passam a ser persistidas antes de a prévia ser entregue.
+        question_persistence_service.enqueue(
+            [*selecionadas, *reserva], disciplina_id, serie
+        )
         preview_id = str(uuid.uuid4())
         disciplina_nome = self._nome_disciplina(disciplina_id)
 
         self.previews[preview_id] = {
+            "user_id": user_id,
             "disciplina_id": disciplina_id,
             "disciplina": disciplina_nome,
             "questoes": selecionadas,
@@ -145,8 +156,8 @@ class AtividadeService:
 
         return self._preview_payload(preview_id)
 
-    def trocar_questao_previa(self, preview_id, questao_id, tipo=None):
-        preview = self._obter_previa(preview_id)
+    def trocar_questao_previa(self, preview_id, questao_id, tipo=None, user_id=None):
+        preview = self._obter_previa(preview_id, user_id)
         questoes = preview["questoes"]
         reserva = preview["reserva"]
 
@@ -180,6 +191,11 @@ class AtividadeService:
                     f"Não há questão {tipo} disponível para troca com esses filtros"
                 )
             raise ValueError("Não há questões reservas para troca")
+
+        question_persistence_service.enqueue(
+            [substituta], preview.get("disciplina_id"),
+            preview.get("meta", {}).get("serie"),
+        )
 
         reserva.append(questoes[indice])
         questoes[indice] = substituta
@@ -232,8 +248,8 @@ class AtividadeService:
 
         return candidatas[0] if candidatas else None
 
-    def remover_questao_previa(self, preview_id, questao_id):
-        preview = self._obter_previa(preview_id)
+    def remover_questao_previa(self, preview_id, questao_id, user_id=None):
+        preview = self._obter_previa(preview_id, user_id)
         questoes = preview["questoes"]
 
         preview["questoes"] = [
@@ -244,20 +260,77 @@ class AtividadeService:
 
         return self._preview_payload(preview_id)
 
+    def editar_questao_previa(
+        self,
+        preview_id,
+        questao_id,
+        enunciado,
+        linhas_resposta=None,
+        user_id=None,
+    ):
+        preview = self._obter_previa(preview_id, user_id)
+        questao = next(
+            (
+                item
+                for item in preview["questoes"]
+                if str(item.get("id")) == str(questao_id)
+            ),
+            None
+        )
+
+        if not questao:
+            raise ValueError("Questão não encontrada na prévia")
+
+        enunciado = self._limpar_texto_manual(enunciado, limite=5000)
+        if not enunciado:
+            raise ValueError("Informe o enunciado da questão")
+
+        questao["enunciado"] = enunciado
+
+        if not questao.get("alternativas"):
+            if linhas_resposta is not None:
+                try:
+                    linhas = int(linhas_resposta)
+                except (TypeError, ValueError):
+                    raise ValueError("Quantidade de linhas inválida")
+
+                questao["linhas_resposta"] = max(1, min(linhas, 12))
+
+        question_persistence_service.enqueue(
+            [questao], preview.get("disciplina_id"),
+            preview.get("meta", {}).get("serie"),
+        )
+
+        return self._preview_payload(preview_id)
+
     def adicionar_questao_manual_previa(
         self,
         preview_id,
-        tipo,
-        enunciado,
+        questao_id=None,
+        tipo=None,
+        enunciado=None,
         alternativas=None,
         gabarito=None,
         conteudo=None,
         dificuldade=None,
+        user_id=None,
     ):
-        preview = self._obter_previa(preview_id)
+        preview = self._obter_previa(preview_id, user_id)
         quantidade_solicitada = int(preview["meta"].get("quantidade") or 0)
+        indice_substituir = None
 
-        if quantidade_solicitada and len(preview["questoes"]) >= quantidade_solicitada:
+        if questao_id is not None:
+            indice_substituir = next(
+                (
+                    i
+                    for i, questao in enumerate(preview["questoes"])
+                    if str(questao.get("id")) == str(questao_id)
+                ),
+                None
+            )
+            if indice_substituir is None:
+                raise ValueError("Questão não encontrada na prévia")
+        elif quantidade_solicitada and len(preview["questoes"]) >= quantidade_solicitada:
             raise ValueError("A prévia já tem a quantidade solicitada de questões")
 
         tipo = (tipo or "").strip().lower()
@@ -297,7 +370,16 @@ class AtividadeService:
             "origem": "manual",
         }
 
-        preview["questoes"].append(questao)
+        question_persistence_service.enqueue(
+            [questao], preview.get("disciplina_id"),
+            preview.get("meta", {}).get("serie"),
+        )
+
+        if indice_substituir is None:
+            preview["questoes"].append(questao)
+        else:
+            preview["questoes"][indice_substituir] = questao
+
         return self._preview_payload(preview_id)
 
     def _limpar_texto_manual(self, texto, limite):
@@ -321,8 +403,8 @@ class AtividadeService:
             for indice, texto in enumerate(textos)
         ]
 
-    def gerar_previa(self, preview_id):
-        preview = self._obter_previa(preview_id)
+    def gerar_previa(self, preview_id, user_id=None):
+        preview = self._obter_previa(preview_id, user_id)
         meta = preview["meta"]
 
         if not preview["questoes"]:
@@ -330,6 +412,9 @@ class AtividadeService:
                 "Não há questões na prévia para gerar o PDF. "
                 "Ajuste os filtros e tente novamente."
             )
+
+        for questao in preview["questoes"]:
+            self._normalizar_creditos_questao(questao)
 
         arquivo = self.pdf.gerar_atividade(
             questoes=preview["questoes"],
@@ -349,10 +434,12 @@ class AtividadeService:
             "meta": meta,
         }
 
-    def _obter_previa(self, preview_id):
+    def _obter_previa(self, preview_id, user_id=None):
         preview = self.previews.get(preview_id)
         if not preview:
             raise ValueError("Prévia não encontrada ou expirada")
+        if user_id is not None and preview.get("user_id") != user_id:
+            raise ValueError("Prévia não pertence a este usuário")
 
         return preview
 
@@ -394,14 +481,38 @@ class AtividadeService:
 
         return avisos
 
+    def _normalizar_creditos_questao(self, questao):
+        enunciado, creditos = self.parser.separar_creditos_imagem(
+            questao.get("enunciado", "")
+        )
+
+        if not creditos:
+            return
+
+        questao["enunciado"] = enunciado
+        creditos_existentes = questao.get("creditos_imagem") or []
+
+        for credito in creditos:
+            if credito not in creditos_existentes:
+                creditos_existentes.append(credito)
+
+        questao["creditos_imagem"] = creditos_existentes
+
     def _questao_preview(self, questao, numero):
+        self._normalizar_creditos_questao(questao)
+
         return {
             "numero": numero,
             "id": questao.get("id"),
             "tipo": questao.get("tipo"),
             "enunciado": questao.get("enunciado", ""),
             "alternativas": questao.get("alternativas", []),
-            "imagens": questao.get("imagens", []),
+            "imagens": [
+                f"/questoes/imagens/{image_id}"
+                for image_id in questao.get("_imagem_ids", [])
+            ] or questao.get("imagens", []),
+            "creditos_imagem": questao.get("creditos_imagem", []),
+            "linhas_resposta": questao.get("linhas_resposta"),
             "gabarito": questao.get("gabarito"),
             "conteudo": questao.get("conteudo"),
             "dificuldade": questao.get("dificuldade"),
@@ -542,37 +653,63 @@ class AtividadeService:
         tipo=None,
         serie=None
     ):
-        questoes = []
+        limite_local = max(int(quantidade or 10) * 10, 500)
+        questoes_locais = db.search_questions(
+            discipline_id=str(disciplina_id),
+            series=serie,
+            difficulty=dificuldade,
+            kind=tipo,
+            content_terms=conteudo,
+            limit=limite_local,
+        )
+        questoes_locais = self.filtro.filtrar(
+            questoes_locais,
+            conteudo=conteudo,
+            dificuldade=dificuldade,
+            tipo=tipo,
+        )
+        if len(questoes_locais) >= quantidade:
+            return questoes_locais
+
+        questoes = list(questoes_locais)
+        ids_existentes = {str(item.get("id")) for item in questoes}
         pagina = 1
 
-        while pagina <= self.MAX_PAGINAS_QUESTOES and len(questoes) < quantidade:
-            resposta = self.client.questoes(
-                disciplina=disciplina_id,
-                page=pagina,
-                per_page=self.PER_PAGE_QUESTOES,
-                fetch_all=False,
-                dificuldade=dificuldade,
-                tipo=tipo,
-                serie=serie
-            )
+        try:
+            while pagina <= self.MAX_PAGINAS_QUESTOES and len(questoes) < quantidade:
+                resposta = self.client.questoes(
+                    disciplina=disciplina_id,
+                    page=pagina,
+                    per_page=self.PER_PAGE_QUESTOES,
+                    fetch_all=False,
+                    dificuldade=dificuldade,
+                    tipo=tipo,
+                    serie=serie
+                )
 
-            questoes_brutas = resposta.get("data", [])
-            if not questoes_brutas:
-                break
+                questoes_brutas = resposta.get("data", [])
+                if not questoes_brutas:
+                    break
 
-            lote = [
-                self.parser.parse(q)
-                for q in questoes_brutas
-            ]
+                lote = [self.parser.parse(q) for q in questoes_brutas]
+                lote = self.filtro.filtrar(
+                    lote, conteudo=conteudo, dificuldade=dificuldade, tipo=tipo
+                )
+                questoes.extend(
+                    item for item in lote if str(item.get("id")) not in ids_existentes
+                )
+                ids_existentes.update(str(item.get("id")) for item in lote)
+                pagina += 1
+        except Exception:
+            # A base local mantém o gerador utilizável durante indisponibilidades externas.
+            return questoes_locais
 
-            lote = self.filtro.filtrar(
-                lote,
+        if not questoes:
+            questoes = self.filtro.filtrar(
+                db.list_questions(str(disciplina_id), serie),
                 conteudo=conteudo,
                 dificuldade=dificuldade,
-                tipo=tipo
+                tipo=tipo,
             )
-
-            questoes.extend(lote)
-            pagina += 1
 
         return questoes

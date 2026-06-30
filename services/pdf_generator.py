@@ -83,10 +83,10 @@ class PDFGenerator:
         doc = BaseDocTemplate(
             str(arquivo),
             pagesize=A4,
-            leftMargin=12 * mm,
+            leftMargin=17 * mm,
             rightMargin=12 * mm,
-            topMargin=55 * mm,
-            bottomMargin=20 * mm,
+            topMargin=50 * mm,
+            bottomMargin=16 * mm,
             title=titulo,
             author="QFUND",
         )
@@ -127,10 +127,10 @@ class PDFGenerator:
             name="questao",
             parent=styles["Normal"],
             fontName="Helvetica",
-            fontSize=12,
-            leading=15,
+            fontSize=10.5,
+            leading=12.5,
             alignment=TA_LEFT,
-            spaceAfter=3,
+            spaceAfter=2,
         ))
 
         styles.add(ParagraphStyle(
@@ -138,6 +138,17 @@ class PDFGenerator:
             parent=styles["questao"],
             leftIndent=7 * mm,
             firstLineIndent=-5 * mm,
+            spaceAfter=1.5,
+        ))
+
+        styles.add(ParagraphStyle(
+            name="credito_imagem",
+            parent=styles["Normal"],
+            fontName="Helvetica",
+            fontSize=7,
+            leading=8,
+            textColor=colors.HexColor("#666666"),
+            alignment=TA_CENTER,
             spaceAfter=2,
         ))
 
@@ -145,15 +156,15 @@ class PDFGenerator:
             name="gabarito_titulo",
             parent=styles["Heading2"],
             fontName="Helvetica-Bold",
-            fontSize=12,
-            leading=15,
+            fontSize=11,
+            leading=13,
             alignment=TA_CENTER,
             spaceAfter=5,
         ))
 
         styles["Normal"].fontName = "Helvetica"
-        styles["Normal"].fontSize = 12
-        styles["Normal"].leading = 15
+        styles["Normal"].fontSize = 10.5
+        styles["Normal"].leading = 12.5
 
         return styles
 
@@ -163,24 +174,42 @@ class PDFGenerator:
         texto = f"{numero}. {enunciado}" if enunciado else f"{numero}."
 
         elementos.append(Paragraph(texto, styles["questao"]))
-        elementos.append(Spacer(1, 2 * mm))
+        elementos.append(Spacer(1, 1.5 * mm))
+
+        creditos_imagem = questao.get("creditos_imagem", [])
 
         for url in questao.get("imagens", []):
             imagem = self._criar_imagem(url, largura)
             if imagem:
                 elementos.append(imagem)
-                elementos.append(Spacer(1, 4 * mm))
+                for credito in creditos_imagem:
+                    elementos.append(Paragraph(
+                        self._texto_seguro(credito),
+                        styles["credito_imagem"],
+                    ))
+                elementos.append(Spacer(1, 2.5 * mm))
 
         alternativas = questao.get("alternativas", [])
-        for alternativa in alternativas:
-            elementos.append(
-                Paragraph(self._texto_seguro(alternativa), styles["alternativa"])
-            )
+        if alternativas:
+            for alternativa in alternativas:
+                elementos.append(
+                    Paragraph(
+                        self._texto_seguro(alternativa),
+                        styles["alternativa"],
+                    )
+                )
 
         if not alternativas and "___" not in enunciado_original:
-            self._adicionar_area_resposta(elementos, enunciado_original)
+            linhas_resposta = questao.get("linhas_resposta")
+            if linhas_resposta:
+                self._adicionar_linhas_resposta(
+                    elementos,
+                    quantidade=max(1, min(int(linhas_resposta), 12)),
+                )
+            else:
+                self._adicionar_area_resposta(elementos, enunciado_original)
 
-        elementos.append(Spacer(1, 5 * mm))
+        elementos.append(Spacer(1, 2.5 * mm))
 
     def _adicionar_area_resposta(self, elementos, enunciado):
         perfil = self._perfil_resposta(enunciado)
@@ -193,12 +222,12 @@ class PDFGenerator:
             self._adicionar_linhas_resposta(elementos, quantidade=2)
             return
 
-        quantidade = 6 if self._pede_resposta_longa(enunciado) else 4
+        quantidade = 5 if self._pede_resposta_longa(enunciado) else 4
         self._adicionar_linhas_resposta(elementos, quantidade=quantidade)
 
     def _adicionar_linhas_resposta(self, elementos, quantidade=4):
         for _ in range(quantidade):
-            elementos.append(Spacer(1, 5 * mm))
+            elementos.append(Spacer(1, 3.5 * mm))
             elementos.append(HRFlowable(
                 width="100%",
                 thickness=0.45,
@@ -208,7 +237,7 @@ class PDFGenerator:
             ))
 
     def _adicionar_espaco_calculo(self, elementos):
-        elementos.append(Spacer(1, 26 * mm))
+        elementos.append(Spacer(1, 18 * mm))
         elementos.append(HRFlowable(
             width="100%",
             thickness=0.45,
@@ -282,6 +311,10 @@ class PDFGenerator:
         termos = (
             "complete",
             "cite",
+            "aponte",
+            "apresente",
+            "defina",
+            "destaque",
             "identifique",
             "indique",
             "nomeie",
@@ -299,8 +332,8 @@ class PDFGenerator:
             reader = ImageReader(str(caminho_imagem))
             largura_original, altura_original = reader.getSize()
 
-            largura_maxima = min(largura_disponivel * 0.82, 150 * mm)
-            altura_maxima = 70 * mm
+            largura_maxima = min(largura_disponivel * 0.96, 180 * mm)
+            altura_maxima = 82 * mm
             escala = min(
                 largura_maxima / largura_original,
                 altura_maxima / altura_original,
@@ -352,11 +385,13 @@ class PDFGenerator:
     def _desenhar_pagina(self, canvas, doc):
         canvas.saveState()
         self._desenhar_cabecalho(canvas)
+        self._desenhar_moldura_conteudo(canvas, primeira_pagina=True)
         self._desenhar_rodape(canvas, doc)
         canvas.restoreState()
 
     def _desenhar_pagina_sem_cabecalho(self, canvas, doc):
         canvas.saveState()
+        self._desenhar_moldura_conteudo(canvas, primeira_pagina=False)
         self._desenhar_rodape(canvas, doc)
         canvas.restoreState()
 
@@ -443,7 +478,7 @@ class PDFGenerator:
             valor_font_size=8.5,
         )
 
-        y_info = topo - 45 * mm
+        y_info = topo - 42 * mm
         gap = 1.5 * mm
         col1 = 53 * mm
         col2 = 39 * mm
@@ -500,6 +535,24 @@ class PDFGenerator:
             )
         except Exception as e:
             print("Erro ao desenhar logo:", e)
+
+    def _desenhar_moldura_conteudo(self, canvas, primeira_pagina):
+        x = 8 * mm
+        y = 13 * mm
+        topo = self.PAGE_HEIGHT - (50 * mm if primeira_pagina else 9 * mm)
+        altura = topo - y
+
+        canvas.setStrokeColor(self.AZUL_PROP)
+        canvas.setLineWidth(0.8)
+        canvas.roundRect(
+            x,
+            y,
+            self.PAGE_WIDTH - (16 * mm),
+            altura,
+            2,
+            stroke=1,
+            fill=0,
+        )
 
     def _campo_retangular(self, canvas, x, y, largura, altura, rotulo, valor, valor_font_size=8.5):
         canvas.setStrokeColor(self.BORDA_PROP)

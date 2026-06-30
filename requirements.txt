@@ -7,3 +7,4 @@ weasyprint
 beautifulsoup4
 reportlab
 httpx
+PyJWT>=2.10,<3

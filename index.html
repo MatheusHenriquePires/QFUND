@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <link href="/static/css/app.css" rel="stylesheet">
+    <link href="/static/css/app.css?v=preview-credit-fix-4" rel="stylesheet">
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased h-screen flex flex-col overflow-hidden">
 
@@ -18,11 +18,12 @@
                 <i class="fas fa-layer-group"></i> QFund
             </div>
         </div>
-        <div class="flex items-center gap-3 bg-white/10 px-4 py-1.5 rounded-full border border-white/20 cursor-pointer hover:bg-white/20 transition-colors">
+        <div class="flex items-center gap-3 bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
             <div class="w-8 h-8 rounded-full bg-white text-[#0052cc] flex items-center justify-center font-bold text-sm shadow-sm">
-                M
+                <span id="userInitial">U</span>
             </div>
-            <span class="text-sm font-medium">Matheus</span>
+            <span id="headerUserName" class="text-sm font-medium">Usuário</span>
+            <button id="logoutButton" type="button" title="Sair" class="ml-1 hover:text-blue-200"><i class="fas fa-right-from-bracket"></i></button>
         </div>
     </header>
 
@@ -216,32 +217,33 @@
         </main>
     </div>
 
-    <div id="previewModal" class="fixed inset-0 z-50 hidden bg-slate-950/70">
-        <div class="h-full w-full flex flex-col bg-slate-100">
-            <div class="h-16 bg-white border-b border-slate-200 px-5 md:px-8 flex items-center justify-between shrink-0">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">Prévia da avaliação</h2>
-                    <p id="previewResumo" class="text-xs text-slate-500 mt-0.5">Revise as questões antes de gerar o PDF.</p>
+    <div id="previewModal" class="fixed inset-0 z-[9999] hidden bg-slate-100 text-slate-900">
+        <div class="preview-shell h-full w-full flex flex-col bg-slate-100">
+            <div class="preview-topbar min-h-[76px] bg-white border-b border-slate-200 px-4 md:px-6 py-3 flex items-center justify-between gap-4 shrink-0 shadow-sm">
+                <div class="min-w-0">
+                    <div class="preview-eyebrow">Revisão antes do PDF</div>
+                    <h2 class="preview-heading">Prévia da avaliação</h2>
+                    <p id="previewResumo" class="preview-subtitle">Revise as questões antes de gerar o PDF.</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" id="previewGerarPdf" class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-4 py-2.5 rounded-lg">
+                <div class="preview-actions">
+                    <button type="button" id="previewGerarPdf" class="preview-primary-action inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed">
                         <i class="fas fa-file-pdf"></i>
-                        Gerar PDF
+                        <span>Gerar PDF</span>
                     </button>
-                    <button type="button" id="previewFechar" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+                    <button type="button" id="previewFechar" class="preview-close-action inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-slate-50" aria-label="Fechar prévia">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[300px_1fr]">
-                <aside class="bg-white border-r border-slate-200 p-5 overflow-y-auto">
-                    <div id="previewStats" class="space-y-3"></div>
+            <div class="preview-workspace flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-4 lg:gap-6 p-4 lg:p-6">
+                <aside class="preview-sidebar min-h-0 overflow-y-auto">
+                    <div id="previewStats" class="preview-stats"></div>
                 </aside>
 
-                <section class="overflow-y-auto p-4 md:p-8">
-                    <div class="max-w-4xl mx-auto bg-white shadow-sm border border-slate-200 min-h-full p-6 md:p-10">
-                        <div class="border-b border-slate-200 pb-5 mb-6">
+                <section class="preview-scroll min-w-0 overflow-y-auto">
+                    <div class="preview-paper w-full max-w-[960px] min-h-full mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm p-5 md:p-7">
+                        <div class="preview-document-header">
                             <div class="flex items-start justify-between gap-6">
                                 <div class="flex-1 min-w-0 pt-2">
                                     <div id="previewTitulo" class="text-2xl text-[#183A7D] truncate">ATIVIDADE</div>
@@ -293,7 +295,7 @@
         </div>
     </div>
 
-    <div id="trocaQuestaoModal" class="fixed inset-0 z-[60] hidden bg-slate-950/60 px-4 py-6">
+    <div id="trocaQuestaoModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/60 px-4 py-6">
         <div class="h-full w-full flex items-center justify-center">
             <div class="w-full max-w-md rounded-lg bg-white shadow-xl border border-slate-200">
                 <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
@@ -326,18 +328,28 @@
                             <span class="block text-sm text-slate-500">Questão com resposta escrita.</span>
                         </span>
                     </button>
+
+                    <button type="button" id="trocaQuestaoCriar" class="w-full flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-left hover:bg-emerald-100">
+                        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-700">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                        <span>
+                            <span class="block font-bold text-slate-900">Criar nova questão</span>
+                            <span class="block text-sm text-slate-500">Substitui esta questão na prévia.</span>
+                        </span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="novaQuestaoModal" class="fixed inset-0 z-[60] hidden bg-slate-950/60 px-4 py-6">
+    <div id="novaQuestaoModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/60 px-4 py-6">
         <div class="h-full w-full flex items-center justify-center">
             <div class="w-full max-w-2xl max-h-full overflow-y-auto rounded-lg bg-white shadow-xl border border-slate-200">
                 <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
                     <div>
                         <h2 class="text-lg font-bold text-slate-900">Criar questão</h2>
-                        <p class="text-sm text-slate-500 mt-1">A questão será adicionada apenas nesta prévia.</p>
+                        <p id="novaQuestaoResumo" class="text-sm text-slate-500 mt-1">A questão será adicionada apenas nesta prévia.</p>
                     </div>
                     <button type="button" id="novaQuestaoFechar" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
                         <i class="fas fa-times"></i>
@@ -410,7 +422,50 @@
         </div>
     </div>
 
-    <script src="/static/js/app.js"></script>
+    <div id="editarQuestaoModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/60 px-4 py-6">
+        <div class="h-full w-full flex items-center justify-center">
+            <div class="w-full max-w-2xl max-h-full overflow-y-auto rounded-lg bg-white shadow-xl border border-slate-200">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Editar questão</h2>
+                        <p id="editarQuestaoResumo" class="text-sm text-slate-500 mt-1">A edição vale apenas para esta prévia.</p>
+                    </div>
+                    <button type="button" id="editarQuestaoFechar" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="editarQuestaoForm" class="p-5 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Enunciado</label>
+                        <textarea id="editarQuestaoEnunciado" rows="7" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm resize-y" required></textarea>
+                    </div>
+
+                    <div id="editarQuestaoLinhasGrupo" class="grid grid-cols-1 md:grid-cols-[1fr_140px] gap-3 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Linhas de resposta</label>
+                            <p class="text-xs text-slate-500">Use para aumentar ou reduzir o espaço da resposta discursiva no PDF.</p>
+                        </div>
+                        <input type="number" id="editarQuestaoLinhas" min="1" max="12" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" value="3">
+                    </div>
+
+                    <div id="editarQuestaoErro" class="hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
+
+                    <div class="flex justify-end gap-2 border-t border-slate-200 pt-4">
+                        <button type="button" id="editarQuestaoCancelar" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                            Cancelar
+                        </button>
+                        <button type="submit" id="editarQuestaoSalvar" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700">
+                            <i class="fas fa-save"></i>
+                            Salvar edição
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js?v=preview-credit-fix-4"></script>
 </body>
 </html>
 

@@ -1,39 +1,21 @@
-import json
-from pathlib import Path
-from typing import Optional
-
-STORAGE = Path("generated/user_profile.json")
+from database import db
 
 class UserService:
-    def __init__(self):
-        self._data = None
-        self._load()
+    def get_profile(self, user_id: int) -> dict:
+        user = db.get_user(user_id)
+        if not user:
+            return {}
+        return {
+            "id": user["id"], "email": user["email"], "nome": user["name"],
+            "tipo": user["role"], "disciplina_preferida": user["preferred_subject"],
+        }
 
-    def _load(self):
-        try:
-            if STORAGE.exists():
-                with open(STORAGE, "r", encoding="utf-8") as f:
-                    self._data = json.load(f)
-            else:
-                self._data = {}
-        except Exception:
-            self._data = {}
-
-    def _save(self):
-        try:
-            STORAGE.parent.mkdir(parents=True, exist_ok=True)
-            with open(STORAGE, "w", encoding="utf-8") as f:
-                json.dump(self._data, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
-
-    def get_profile(self) -> dict:
-        return self._data or {}
-
-    def set_profile(self, profile: dict):
-        self._data = profile or {}
-        self._save()
-
-    def clear(self):
-        self._data = {}
-        self._save()
+    def set_profile(self, user_id: int, profile: dict):
+        current = db.get_user(user_id)
+        if not current:
+            raise ValueError("Usuário não encontrado")
+        role = profile.get("tipo") or current["role"]
+        if role not in ("professor", "usuario"):
+            raise ValueError("Tipo de usuário inválido")
+        name = profile.get("nome") or current["name"]
+        db.update_user(user_id, name, role, profile.get("disciplina_preferida"))

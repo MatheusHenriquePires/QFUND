@@ -30,8 +30,10 @@
         const trocaQuestaoModal = document.getElementById("trocaQuestaoModal");
         const trocaQuestaoResumo = document.getElementById("trocaQuestaoResumo");
         const trocaQuestaoFechar = document.getElementById("trocaQuestaoFechar");
+        const trocaQuestaoCriar = document.getElementById("trocaQuestaoCriar");
         const trocaTipoButtons = document.querySelectorAll(".troca-tipo");
         const novaQuestaoModal = document.getElementById("novaQuestaoModal");
+        const novaQuestaoResumo = document.getElementById("novaQuestaoResumo");
         const novaQuestaoForm = document.getElementById("novaQuestaoForm");
         const novaQuestaoFechar = document.getElementById("novaQuestaoFechar");
         const novaQuestaoCancelar = document.getElementById("novaQuestaoCancelar");
@@ -44,6 +46,16 @@
         const novaQuestaoErro = document.getElementById("novaQuestaoErro");
         const novaQuestaoSalvar = document.getElementById("novaQuestaoSalvar");
         const novaAlternativas = document.querySelectorAll(".nova-alternativa");
+        const editarQuestaoModal = document.getElementById("editarQuestaoModal");
+        const editarQuestaoResumo = document.getElementById("editarQuestaoResumo");
+        const editarQuestaoForm = document.getElementById("editarQuestaoForm");
+        const editarQuestaoFechar = document.getElementById("editarQuestaoFechar");
+        const editarQuestaoCancelar = document.getElementById("editarQuestaoCancelar");
+        const editarQuestaoEnunciado = document.getElementById("editarQuestaoEnunciado");
+        const editarQuestaoLinhasGrupo = document.getElementById("editarQuestaoLinhasGrupo");
+        const editarQuestaoLinhas = document.getElementById("editarQuestaoLinhas");
+        const editarQuestaoErro = document.getElementById("editarQuestaoErro");
+        const editarQuestaoSalvar = document.getElementById("editarQuestaoSalvar");
 
         let conteudosDisponiveis = [];
         let conteudosArvore = [];
@@ -51,6 +63,10 @@
         let conteudosExpandidos = new Set();
         let previewAtual = null;
         let trocaQuestaoId = null;
+        let novaQuestaoSubstituirId = null;
+        let editarQuestaoId = null;
+        let previewFeedback = null;
+        let previewHighlightId = null;
         let disciplinasDisponiveis = [];
         let contagensConteudos = null;
 
@@ -93,6 +109,10 @@
 
         async function fetchJson(url, options = {}, contexto = "requisição") {
             const response = await fetch(url, options);
+            if (response.status === 401) {
+                window.location.href = '/';
+                throw new Error('Sua sessão expirou.');
+            }
             if (!response.ok) {
                 const body = await response.text();
                 throw new Error(body || `${contexto} falhou (${response.status})`);
@@ -103,6 +123,10 @@
 
         async function fetchBlob(url, options = {}, contexto = "download") {
             const response = await fetch(url, options);
+            if (response.status === 401) {
+                window.location.href = '/';
+                throw new Error('Sua sessão expirou.');
+            }
             if (!response.ok) {
                 const body = await response.text();
                 throw new Error(body || `${contexto} falhou (${response.status})`);
@@ -561,6 +585,7 @@
             previewModal.classList.add("hidden");
             fecharTrocaQuestaoModal();
             fecharNovaQuestaoModal();
+            fecharEditarQuestaoModal();
             document.body.classList.remove("overflow-hidden");
         }
 
@@ -575,19 +600,50 @@
             trocaQuestaoModal.classList.add("hidden");
         }
 
-        function abrirNovaQuestaoModal() {
+        function abrirNovaQuestaoModal(opcoes = {}) {
             novaQuestaoForm.reset();
             novaQuestaoErro.classList.add("hidden");
             novaQuestaoErro.textContent = "";
+            novaQuestaoSubstituirId = opcoes.substituirId || null;
+            novaQuestaoResumo.textContent = novaQuestaoSubstituirId
+                ? `A nova questão substituirá a questão ${opcoes.numero || ""} nesta prévia.`
+                : "A questão será adicionada apenas nesta prévia.";
+            novaQuestaoSalvar.innerHTML = novaQuestaoSubstituirId
+                ? '<i class="fas fa-sync-alt"></i> Substituir'
+                : '<i class="fas fa-plus"></i> Adicionar';
             novaQuestaoTipo.value = (previewAtual && previewAtual.meta && previewAtual.meta.tipo) || "objetiva";
             novaQuestaoDificuldade.value = (previewAtual && previewAtual.meta && previewAtual.meta.dificuldade) || "Manual";
             alternarCamposNovaQuestao();
+            fecharTrocaQuestaoModal();
             novaQuestaoModal.classList.remove("hidden");
             novaQuestaoEnunciado.focus();
         }
 
         function fecharNovaQuestaoModal() {
+            novaQuestaoSubstituirId = null;
             novaQuestaoModal.classList.add("hidden");
+        }
+
+        function abrirEditarQuestaoModal(questao) {
+            editarQuestaoId = questao.id;
+            editarQuestaoResumo.textContent = `Editando a questão ${questao.numero}.`;
+            editarQuestaoEnunciado.value = questao.enunciado || "";
+            editarQuestaoLinhas.value = questao.linhas_resposta || 3;
+            editarQuestaoLinhasGrupo.classList.toggle("hidden", !!(questao.alternativas || []).length);
+            editarQuestaoErro.classList.add("hidden");
+            editarQuestaoErro.textContent = "";
+            editarQuestaoModal.classList.remove("hidden");
+            editarQuestaoEnunciado.focus();
+        }
+
+        function fecharEditarQuestaoModal() {
+            editarQuestaoId = null;
+            editarQuestaoModal.classList.add("hidden");
+        }
+
+        function mostrarErroEditarQuestao(mensagem) {
+            editarQuestaoErro.textContent = mensagem;
+            editarQuestaoErro.classList.remove("hidden");
         }
 
         function alternarCamposNovaQuestao() {
@@ -612,6 +668,7 @@
 
             return {
                 preview_id: previewAtual.preview_id,
+                questao_id: novaQuestaoSubstituirId,
                 tipo,
                 enunciado: novaQuestaoEnunciado.value.trim(),
                 alternativas: tipo === "objetiva" ? alternativas : [],
@@ -621,31 +678,102 @@
             };
         }
 
+        function definirFeedbackPreview(mensagem, tipo = "success") {
+            previewFeedback = { mensagem, tipo };
+            window.setTimeout(() => {
+                if (previewFeedback && previewFeedback.mensagem === mensagem) {
+                    previewFeedback = null;
+                    if (previewAtual && !previewModal.classList.contains("hidden")) {
+                        renderizarPreview(previewAtual);
+                    }
+                }
+            }, 3200);
+        }
+
+        function statCard(valor, rotulo) {
+            return `
+                <div class="summary-stat">
+                    <strong>${escapeHtml(valor)}</strong>
+                    <span>${escapeHtml(rotulo)}</span>
+                </div>
+            `;
+        }
+
+        function badgeQuestao(valor, icone = "fa-tag", extraClasse = "") {
+            if (!valor) return "";
+            return `
+                <span class="question-badge ${extraClasse}">
+                    <i class="fas ${icone}"></i>
+                    <span>${escapeHtml(valor)}</span>
+                </span>
+            `;
+        }
+
+        function separarCreditosImagemTexto(texto) {
+            const creditos = [];
+            const regex = /Dispon.vel\s+em\s*:\s*[\s\S]*?Acesso\s+em\s*:\s*\d{1,2}\s+[^\s.]+\.?\s+\d{4}\.?/gi;
+            const enunciado = String(texto || "").replace(regex, (match) => {
+                creditos.push(match.replace(/\s+/g, " ").trim());
+                return " ";
+            }).replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+
+            return { enunciado, creditos };
+        }
+
+        function encontrarCardQuestao(questaoId) {
+            return Array.from(previewQuestoes.querySelectorAll(".question-card"))
+                .find((card) => String(card.dataset.questaoId) === String(questaoId));
+        }
+
+        function marcarCardCarregando(questaoId, mensagem, seletor = ".trocar-questao") {
+            const card = encontrarCardQuestao(questaoId);
+            if (!card) return;
+
+            card.classList.add("is-loading");
+            const botao = card.querySelector(seletor);
+            if (botao && mensagem) {
+                botao.innerHTML = `<i class="fas fa-spinner fa-spin"></i><span>${escapeHtml(mensagem)}</span>`;
+            }
+        }
+
         function renderizarPreview(data) {
             previewAtual = data;
             abrirPreviewModal();
 
             const stats = data.estatisticas || {};
-            const dificuldades = Object.entries(stats.dificuldades || {})
-                .map(([nome, total]) => `${escapeHtml(nome)}: <b>${total}</b>`)
-                .join("<br>");
+            const dificuldades = Object.entries(stats.dificuldades || {});
+            const dificuldadesHtml = dificuldades.length
+                ? dificuldades
+                    .map(([nome, total]) => `
+                        <div class="summary-row">
+                            <span>${escapeHtml(nome)}</span>
+                            <b>${total}</b>
+                        </div>
+                    `)
+                    .join("")
+                : "<span class='text-sm text-slate-500'>Sem dados</span>";
 
             const quantidadeSolicitada = data.quantidade_solicitada || (data.meta && data.meta.quantidade) || data.quantidade;
             const faltantes = Math.max(quantidadeSolicitada - data.quantidade, 0);
             const avisos = data.avisos || [];
             const avisosHtml = avisos
                 .map((aviso) => `
-                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                        <div class="font-bold">Atenção</div>
+                    <div class="preview-notice">
+                        <div class="font-bold"><i class="fas fa-triangle-exclamation mr-2"></i>Atenção</div>
                         <div class="mt-1">${escapeHtml(aviso.mensagem || "")}</div>
                     </div>
                 `)
                 .join("");
+            const feedbackHtml = previewFeedback ? `
+                <div class="preview-notice ${previewFeedback.tipo === "success" ? "success" : ""}">
+                    <div class="font-bold"><i class="fas fa-check-circle mr-2"></i>${escapeHtml(previewFeedback.mensagem)}</div>
+                </div>
+            ` : "";
             const criarQuestaoHtml = faltantes > 0 ? `
-                <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                    <div class="font-bold">Completar avaliação</div>
+                <div class="preview-notice success">
+                    <div class="font-bold"><i class="fas fa-plus-circle mr-2"></i>Completar avaliação</div>
                     <div class="mt-1 text-emerald-800">Faltam ${faltantes} questão${faltantes > 1 ? "ões" : ""} para chegar ao total solicitado.</div>
-                    <button type="button" class="criar-questao-manual mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-600">
+                    <button type="button" class="criar-questao-manual preview-mini-action">
                         <i class="fas fa-plus"></i>
                         Criar questão
                     </button>
@@ -663,24 +791,32 @@
             previewGerarPdf.classList.toggle("cursor-not-allowed", previewGerarPdf.disabled);
 
             previewStats.innerHTML = `
+                ${feedbackHtml}
                 ${avisosHtml}
                 ${criarQuestaoHtml}
-                <div class="rounded-lg border border-slate-200 p-4">
-                    <div class="text-xs font-bold text-slate-500 uppercase">Resumo</div>
-                    <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
-                        <div class="rounded bg-slate-50 p-3"><b>${data.quantidade}</b><br><span class="text-slate-500">de ${quantidadeSolicitada}</span></div>
-                        <div class="rounded bg-slate-50 p-3"><b>${data.reservas || 0}</b><br><span class="text-slate-500">reservas</span></div>
-                        <div class="rounded bg-slate-50 p-3"><b>${stats.objetivas || 0}</b><br><span class="text-slate-500">objetivas</span></div>
-                        <div class="rounded bg-slate-50 p-3"><b>${stats.discursivas || 0}</b><br><span class="text-slate-500">discursivas</span></div>
+                <div class="summary-panel">
+                    <div class="summary-title"><i class="fas fa-chart-simple text-blue-600"></i>Resumo</div>
+                    <div class="summary-grid">
+                        ${statCard(data.quantidade, `de ${quantidadeSolicitada} questões`)}
+                        ${statCard(data.reservas || 0, "reservas")}
                     </div>
                 </div>
-                <div class="rounded-lg border border-slate-200 p-4 text-sm">
-                    <div class="text-xs font-bold text-slate-500 uppercase mb-2">Dificuldades</div>
-                    ${dificuldades || "<span class='text-slate-500'>Sem dados</span>"}
+                <div class="summary-panel">
+                    <div class="summary-title"><i class="fas fa-layer-group text-blue-600"></i>Tipos de questão</div>
+                    <div class="summary-grid">
+                        ${statCard(stats.objetivas || 0, "objetivas")}
+                        ${statCard(stats.discursivas || 0, "discursivas")}
+                    </div>
                 </div>
-                <div class="rounded-lg border border-slate-200 p-4 text-sm">
-                    <div class="text-xs font-bold text-slate-500 uppercase mb-2">Imagens</div>
-                    ${stats.com_imagem || 0} questões com imagem
+                <div class="summary-panel">
+                    <div class="summary-title"><i class="fas fa-signal text-blue-600"></i>Dificuldades</div>
+                    <div class="summary-list">${dificuldadesHtml}</div>
+                </div>
+                <div class="summary-panel">
+                    <div class="summary-title"><i class="fas fa-image text-blue-600"></i>Imagens</div>
+                    <div class="summary-grid">
+                        ${statCard(stats.com_imagem || 0, "com imagem")}
+                    </div>
                 </div>
             `;
             const criarQuestaoButton = previewStats.querySelector(".criar-questao-manual");
@@ -692,59 +828,106 @@
 
             if (!data.questoes || !data.questoes.length) {
                 previewQuestoes.innerHTML = `
-                    <div class="rounded-lg border border-amber-200 bg-amber-50 text-amber-800 p-4 text-sm">
-                        Nenhuma questão encontrada para esses filtros. Ajuste a série, disciplina, conteúdo ou dificuldade para gerar o PDF.
+                    <div class="empty-preview">
+                        <div class="text-3xl text-amber-500 mb-3"><i class="fas fa-circle-info"></i></div>
+                        <div class="text-lg font-bold text-slate-900">Nenhuma questão encontrada</div>
+                        <div class="mt-2 text-sm">Ajuste a série, disciplina, conteúdo ou dificuldade para montar uma nova prévia.</div>
                     </div>`;
                 return;
             }
 
             data.questoes.forEach((questao) => {
                 const card = document.createElement("article");
-                card.className = "border border-slate-200 rounded-lg p-4 md:p-5";
+                card.className = `question-card ${String(previewHighlightId) === String(questao.id) ? "is-updated" : ""}`;
                 card.dataset.questaoId = questao.id;
+                const textoQuestao = separarCreditosImagemTexto(questao.enunciado || "");
+                const creditosDaQuestao = [
+                    ...(questao.creditos_imagem || []),
+                    ...textoQuestao.creditos
+                ].filter((credito, index, lista) => credito && lista.indexOf(credito) === index);
 
                 const alternativas = (questao.alternativas || [])
-                    .map((alt) => `<div class="mt-1">${escapeHtml(alt)}</div>`)
+                    .map((alt) => `<div class="alternative-item">${escapeHtml(alt)}</div>`)
+                    .join("");
+
+                const creditosImagem = creditosDaQuestao
+                    .map((credito) => `<div class="image-credit">${escapeHtml(credito)}</div>`)
                     .join("");
 
                 const imagens = (questao.imagens || [])
-                    .map((src) => `<img src="${escapeHtml(src)}" class="my-3 max-h-64 max-w-full object-contain border border-slate-200 rounded" alt="">`)
+                    .map((src) => `
+                        <figure class="question-media">
+                            <img src="${escapeHtml(src)}" alt="Imagem da questão ${escapeHtml(questao.numero)}">
+                            ${creditosImagem}
+                        </figure>
+                    `)
                     .join("");
 
-                const meta = [
-                    questao.tipo,
-                    questao.dificuldade,
-                    questao.conteudo
-                ].filter(Boolean).map(escapeHtml).join(" · ");
+                const badges = [
+                    badgeQuestao(questao.tipo, questao.tipo === "objetiva" ? "fa-list-ul" : "fa-pen-to-square"),
+                    badgeQuestao(questao.dificuldade, "fa-signal", "neutral"),
+                    badgeQuestao(data.disciplina, "fa-book", "neutral"),
+                    badgeQuestao(questao.conteudo, "fa-folder-tree", "neutral"),
+                    badgeQuestao(questao.origem, "fa-route", "neutral")
+                ].join("");
+                const linhasResposta = Math.max(1, Math.min(Number(questao.linhas_resposta || 3), 12));
+                const linhasRespostaHtml = Array.from({ length: linhasResposta })
+                    .map(() => '<div class="answer-line"></div>')
+                    .join("");
 
                 card.innerHTML = `
-                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                        <div class="min-w-0">
-                            <div class="text-xs text-slate-500 mb-2">${meta}</div>
-                            <div class="font-semibold text-slate-900 leading-relaxed">${questao.numero}. ${escapeHtml(questao.enunciado || "")}</div>
-                        </div>
-                        <div class="flex gap-2 shrink-0">
-                            <button type="button" class="trocar-questao inline-flex items-center gap-2 rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-2 text-xs font-bold">
-                                <i class="fas fa-sync-alt"></i> Trocar
+                    <div class="question-topline">
+                        <div class="question-badges">${badges}</div>
+                        <div class="question-actions">
+                            <button type="button" class="editar-questao question-action edit" aria-label="Editar questão ${escapeHtml(questao.numero)}">
+                                <i class="fas fa-pen"></i>
+                                <span>Editar</span>
                             </button>
-                            <button type="button" class="remover-questao inline-flex items-center gap-2 rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 text-xs font-bold">
-                                <i class="fas fa-trash"></i> Remover
+                            <button type="button" class="trocar-questao question-action swap" aria-label="Trocar questão ${escapeHtml(questao.numero)}">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Trocar</span>
+                            </button>
+                            <button type="button" class="remover-questao question-action remove" aria-label="Remover questão ${escapeHtml(questao.numero)}">
+                                <i class="fas fa-trash"></i>
+                                <span>Remover</span>
                             </button>
                         </div>
                     </div>
+                    <div class="question-body">
+                        <div class="question-number">${escapeHtml(questao.numero)}</div>
+                        <div class="question-enunciado">${escapeHtml(textoQuestao.enunciado || "")}</div>
+                    </div>
                     ${imagens}
-                    <div class="mt-3 text-sm leading-relaxed">${alternativas}</div>
-                    ${questao.tipo === "discursiva" ? "<div class='mt-4 space-y-3'><div class='border-b border-slate-300 h-5'></div><div class='border-b border-slate-300 h-5'></div><div class='border-b border-slate-300 h-5'></div></div>" : ""}
+                    ${alternativas ? `<div class="alternatives-list">${alternativas}</div>` : ""}
+                    ${questao.tipo === "discursiva" ? `
+                        <div class="answer-lines">
+                            ${linhasRespostaHtml}
+                        </div>
+                    ` : ""}
                 `;
 
+                card.querySelector(".editar-questao").addEventListener("click", () => abrirEditarQuestaoModal(questao));
                 card.querySelector(".trocar-questao").addEventListener("click", () => abrirTrocaQuestaoModal(questao));
                 card.querySelector(".remover-questao").addEventListener("click", () => removerQuestaoPreview(questao.id));
                 previewQuestoes.appendChild(card);
             });
+
+            if (previewHighlightId) {
+                window.setTimeout(() => {
+                    previewHighlightId = null;
+                    document.querySelectorAll(".question-card.is-updated")
+                        .forEach((item) => item.classList.remove("is-updated"));
+                }, 1600);
+            }
         }
 
         async function trocarQuestaoPreview(questaoId, tipo) {
             if (!previewAtual) return;
+
+            const questaoAnterior = (previewAtual.questoes || []).find(
+                (questao) => String(questao.id) === String(questaoId)
+            );
+            marcarCardCarregando(questaoId, "Trocando...");
 
             try {
                 fecharTrocaQuestaoModal();
@@ -759,27 +942,38 @@
                     })
                 }, "trocar questão");
 
+                const questaoNova = questaoAnterior
+                    ? (data.questoes || []).find((questao) => questao.numero === questaoAnterior.numero)
+                    : null;
+                previewHighlightId = questaoNova ? questaoNova.id : null;
+                definirFeedbackPreview("Questão trocada com sucesso.");
                 renderizarPreview(data);
             } catch (erro) {
                 registrarErro("Erro ao trocar questão da prévia", erro, { questaoId });
                 alert(textoErro(erro, "Não consegui trocar essa questão. Talvez não haja reserva compatível."));
+                renderizarPreview(previewAtual);
             }
         }
 
         async function removerQuestaoPreview(questaoId) {
             if (!previewAtual) return;
+            const confirma = window.confirm("Remover esta questão da prévia?");
+            if (!confirma) return;
 
             try {
+                marcarCardCarregando(questaoId, "Removendo...", ".remover-questao");
                 const data = await fetchJson(`${API}/previsualizar-atividade/remover`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ preview_id: previewAtual.preview_id, questao_id: questaoId })
                 }, "remover questão");
 
+                definirFeedbackPreview("Questão removida da prévia.");
                 renderizarPreview(data);
             } catch (erro) {
                 registrarErro("Erro ao remover questão da prévia", erro, { questaoId });
                 alert(textoErro(erro, "Não consegui remover essa questão."));
+                renderizarPreview(previewAtual);
             }
         }
 
@@ -816,6 +1010,14 @@
                     body: JSON.stringify(payload)
                 }, "adicionar questão manual");
 
+                const questoesRetorno = data.questoes || [];
+                const numeroSubstituido = (previewAtual.questoes || [])
+                    .find((item) => String(item.id) === String(payload.questao_id))?.numero;
+                const questaoManual = payload.questao_id
+                    ? questoesRetorno.find((questao) => String(questao.numero) === String(numeroSubstituido))
+                    : questoesRetorno[questoesRetorno.length - 1];
+                previewHighlightId = questaoManual ? questaoManual.id : null;
+                definirFeedbackPreview(payload.questao_id ? "Questão substituída com sucesso." : "Questão adicionada à prévia.");
                 fecharNovaQuestaoModal();
                 renderizarPreview(data);
             } catch (erro) {
@@ -823,7 +1025,55 @@
                 mostrarErroNovaQuestao(textoErro(erro, "Não consegui adicionar essa questão."));
             } finally {
                 novaQuestaoSalvar.disabled = false;
-                novaQuestaoSalvar.innerHTML = '<i class="fas fa-plus"></i> Adicionar';
+                novaQuestaoSalvar.innerHTML = novaQuestaoSubstituirId
+                    ? '<i class="fas fa-sync-alt"></i> Substituir'
+                    : '<i class="fas fa-plus"></i> Adicionar';
+            }
+        }
+
+        async function salvarEdicaoQuestao(event) {
+            event.preventDefault();
+            if (!previewAtual || !editarQuestaoId) return;
+
+            const questaoAtual = (previewAtual.questoes || []).find(
+                (questao) => String(questao.id) === String(editarQuestaoId)
+            );
+            const enunciado = editarQuestaoEnunciado.value.trim();
+            if (!enunciado) {
+                mostrarErroEditarQuestao("Informe o enunciado da questão.");
+                return;
+            }
+
+            const payload = {
+                preview_id: previewAtual.preview_id,
+                questao_id: editarQuestaoId,
+                enunciado,
+                linhas_resposta: questaoAtual && !(questaoAtual.alternativas || []).length
+                    ? Number(editarQuestaoLinhas.value || 3)
+                    : null
+            };
+
+            editarQuestaoSalvar.disabled = true;
+            editarQuestaoSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            editarQuestaoErro.classList.add("hidden");
+
+            try {
+                const data = await fetchJson(`${API}/previsualizar-atividade/editar`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                }, "editar questão");
+
+                previewHighlightId = editarQuestaoId;
+                definirFeedbackPreview("Questão editada com sucesso.");
+                fecharEditarQuestaoModal();
+                renderizarPreview(data);
+            } catch (erro) {
+                registrarErro("Erro ao editar questão", erro, payload);
+                mostrarErroEditarQuestao(textoErro(erro, "Não consegui salvar a edição."));
+            } finally {
+                editarQuestaoSalvar.disabled = false;
+                editarQuestaoSalvar.innerHTML = '<i class="fas fa-save"></i> Salvar edição';
             }
         }
 
@@ -876,12 +1126,28 @@
                 trocarQuestaoPreview(trocaQuestaoId, button.dataset.tipo);
             });
         });
+        trocaQuestaoCriar.addEventListener("click", () => {
+            if (!trocaQuestaoId || !previewAtual) return;
+            const questao = (previewAtual.questoes || []).find(
+                (item) => String(item.id) === String(trocaQuestaoId)
+            );
+            abrirNovaQuestaoModal({
+                substituirId: trocaQuestaoId,
+                numero: questao ? questao.numero : ""
+            });
+        });
         novaQuestaoFechar.addEventListener("click", fecharNovaQuestaoModal);
         novaQuestaoCancelar.addEventListener("click", fecharNovaQuestaoModal);
         novaQuestaoTipo.addEventListener("change", alternarCamposNovaQuestao);
         novaQuestaoForm.addEventListener("submit", adicionarQuestaoManual);
         novaQuestaoModal.addEventListener("click", (event) => {
             if (!event.target.closest || !event.target.closest(".max-w-2xl")) fecharNovaQuestaoModal();
+        });
+        editarQuestaoFechar.addEventListener("click", fecharEditarQuestaoModal);
+        editarQuestaoCancelar.addEventListener("click", fecharEditarQuestaoModal);
+        editarQuestaoForm.addEventListener("submit", salvarEdicaoQuestao);
+        editarQuestaoModal.addEventListener("click", (event) => {
+            if (!event.target.closest || !event.target.closest(".max-w-2xl")) fecharEditarQuestaoModal();
         });
 
         form.addEventListener("submit", async function (e) {
@@ -954,6 +1220,11 @@
                 const profile = await fetchJson(`${API}/usuario`, {}, "carregar perfil");
                 if (!profile) return;
 
+                const headerName = document.getElementById('headerUserName');
+                const userInitial = document.getElementById('userInitial');
+                if (headerName) headerName.textContent = profile.nome || profile.email || 'Usuário';
+                if (userInitial) userInitial.textContent = (profile.nome || profile.email || 'U').trim().charAt(0).toUpperCase();
+
                 if (profile.tipo && tipoSelect) tipoSelect.value = profile.tipo;
                 if (profile.tipo === 'professor') {
                     if (professorInput) {
@@ -988,6 +1259,14 @@
 
         if (professorInput) {
             professorInput.addEventListener('blur', saveProfile);
+        }
+
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', async () => {
+                await fetch(`${API}/auth/logout`, { method: 'POST' });
+                window.location.href = '/';
+            });
         }
 
         carregarDisciplinas().then(() => loadProfile()).catch(() => {});

@@ -53,6 +53,9 @@ A aplicação permite selecionar disciplinas, conteúdos, dificuldades, tipos de
 - ✅ Histórico das atividades
 - ✅ Download de PDFs
 - ✅ Perfil do usuário
+- ✅ Login e cadastro com senha protegida
+- ✅ Autenticação JWT revogável em cookie HttpOnly
+- ✅ SQLite para usuários, sessões, questões, imagens e histórico
 - ✅ Cache das consultas
 - ✅ Interface Web
 
@@ -110,6 +113,10 @@ Os PDFs gerados possuem:
 - ReportLab
 - python-dotenv
 - Pydantic
+- SQLite
+
+O banco é criado automaticamente em `generated/qfund.db`. Para usar outro local,
+defina `DATABASE_PATH` no ambiente antes de iniciar a aplicação.
 
 ---
 
@@ -203,9 +210,26 @@ Crie um arquivo `.env`
 BERNOULLI_EMAIL=seu_email
 BERNOULLI_PASSWORD=sua_senha
 BERNOULLI_CACHE_TTL=3600
+JWT_SECRET=gere_um_segredo_aleatorio_com_pelo_menos_32_bytes
+JWT_EXPIRE_MINUTES=60
 ```
 
-O parâmetro `BERNOULLI_CACHE_TTL` é opcional.
+`JWT_SECRET` deve ser definido obrigatoriamente em produção. No desenvolvimento local,
+o QFund gera uma chave em `generated/jwt_secret.key`. Os parâmetros de TTL são opcionais.
+
+## Sincronização integral do banco de questões
+
+Para importar todas as disciplinas, questões, imagens, conteúdos e classificações de série:
+
+```powershell
+.\venv\Scripts\python.exe sync_question_bank.py
+```
+
+A operação é idempotente: execuções posteriores atualizam registros existentes sem duplicá-los.
+O progresso fica em `sync_runs` e também pode ser consultado em `GET /banco/status`.
+Para exploração no SQLite, use as views `question_bank_view` e `question_bank_summary`.
+Questões encontradas durante o uso normal também entram em uma fila de gravação em segundo
+plano, em lotes, para não bloquear a montagem da prévia enquanto imagens são baixadas.
 
 ---
 
@@ -436,8 +460,8 @@ Adiciona várias linhas automaticamente.
 - [x] Geração automática
 - [x] Questões com imagens
 - [x] Gabarito
-- [ ] Login
-- [ ] Banco de dados
+- [x] Login com JWT
+- [x] Banco de dados
 - [ ] Docker
 - [ ] Testes automatizados
 - [ ] Painel administrativo

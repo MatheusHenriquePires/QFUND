@@ -24,12 +24,20 @@ class PreviewActionRequest(BaseModel):
 
 class PreviewQuestionCreateRequest(BaseModel):
     preview_id: str
+    questao_id: Optional[Union[str, int]] = None
     tipo: str
     enunciado: str
     alternativas: Optional[List[str]] = []
     gabarito: Optional[str] = None
     conteudo: Optional[str] = None
     dificuldade: Optional[str] = None
+
+
+class PreviewQuestionEditRequest(BaseModel):
+    preview_id: str
+    questao_id: Union[str, int]
+    enunciado: str
+    linhas_resposta: Optional[int] = None
 
 
 class PreviewGenerateRequest(BaseModel):
@@ -40,4 +48,21 @@ class UserProfile(BaseModel):
     nome: Optional[str] = None
     tipo: Optional[str] = "usuario"  # 'professor' ou 'usuario'
     disciplina_preferida: Optional[str] = None
+
+
+class RegisterRequest(BaseModel):
+    nome: str
+    email: str
+    senha: str
+    tipo: str = "professor"
+
+
+class LoginRequest(BaseModel):
+    email: str
+    senha: str
+
+
+class QuestionSyncRequest(BaseModel):
+    baixar_imagens: bool = True
+    classificar_series: bool = True
 

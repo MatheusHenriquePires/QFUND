@@ -56,11 +56,17 @@ class BernoulliClient:
 
     def _log_response(self, evento, payload, **metadata):
         try:
+            logged_payload = payload
+            if evento == "questoes" and os.getenv("BERNOULLI_LOG_PAYLOAD", "0") != "1":
+                logged_payload = {
+                    "items": len(payload.get("data", [])) if isinstance(payload, dict) else 0,
+                    "meta": payload.get("meta") if isinstance(payload, dict) else None,
+                }
             registro = {
                 "ts": int(time.time()),
                 "evento": evento,
                 "metadata": metadata,
-                "payload": payload
+                "payload": logged_payload
             }
 
             with self._log_path.open("a", encoding="utf-8") as f:

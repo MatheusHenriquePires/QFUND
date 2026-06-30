@@ -23,10 +23,12 @@ generated/*.log
 generated/*cache*.json
 generated/history.json
 generated/user_profile.json
+generated/qfund.db*
+generated/db_images/
+generated/jwt_secret.key
 
 # OS/editor files
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-
