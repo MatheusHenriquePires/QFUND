@@ -23,12 +23,16 @@ generated/*.log
 generated/*cache*.json
 generated/history.json
 generated/user_profile.json
-generated/qfund.db*
 generated/db_images/
 generated/jwt_secret.key
 
+# SQLite database usado no deploy
+generated/qfund.db-shm
+generated/qfund.db-wal
+generated/qfund.db
 # OS/editor files
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+generated/qfund.db

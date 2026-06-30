@@ -8,3 +8,4 @@ beautifulsoup4
 reportlab
 httpx
 PyJWT>=2.10,<3
+PyMySQL>=1.1,<2

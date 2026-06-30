@@ -1,471 +1,599 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QFund - Gerador de Atividades</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <link href="/static/css/app.css?v=preview-credit-fix-4" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>QFund - Gerador de Atividades</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/css/app.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#EEF3FF',
+              100: '#DCE7FF',
+              400: '#3D7BFF',
+              500: '#0B52E8',
+              600: '#0843C2',
+              700: '#063494'
+            }
+          },
+          fontFamily: {
+            display: ['Sora', 'sans-serif'],
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased h-screen flex flex-col overflow-hidden">
 
-    <header class="bg-[#0052cc] text-white h-16 flex items-center justify-between px-6 shadow-md z-20 shrink-0">
-        <div class="flex items-center gap-4">
-            <div class="text-2xl font-bold tracking-wide flex items-center gap-2">
-                <i class="fas fa-layer-group"></i> QFund
-            </div>
-        </div>
-        <div class="flex items-center gap-3 bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
-            <div class="w-8 h-8 rounded-full bg-white text-[#0052cc] flex items-center justify-center font-bold text-sm shadow-sm">
-                <span id="userInitial">U</span>
-            </div>
-            <span id="headerUserName" class="text-sm font-medium">Usuário</span>
-            <button id="logoutButton" type="button" title="Sair" class="ml-1 hover:text-blue-200"><i class="fas fa-right-from-bracket"></i></button>
-        </div>
-    </header>
+<body class="bg-[#F4F7FF] text-gray-800 antialiased h-screen flex flex-col overflow-hidden">
 
-    <div class="flex flex-1 overflow-hidden">
-        
-        <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col shrink-0 overflow-y-auto shadow-[4px_0_10px_rgba(0,0,0,0.02)]">
-            <div class="p-5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Menu
+  <header class="header-mesh text-white h-16 flex items-center justify-between px-6 z-20 shrink-0">
+    <div class="header-blob hb1"></div>
+    <div class="header-blob hb2"></div>
+
+    <div class="relative z-10 font-display font-bold text-xl flex items-center gap-2.5">
+      <span class="w-8 h-8 rounded-xl bg-white/15 border border-white/25 grid place-items-center">
+        <i class="fas fa-layer-group text-sm"></i>
+      </span>
+      QFund
+    </div>
+
+    <div class="relative z-10 flex items-center gap-3 bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
+      <div class="w-8 h-8 rounded-full bg-white text-brand-500 flex items-center justify-center font-bold text-sm shadow-sm">
+        <span id="userInitial">U</span>
+      </div>
+
+      <span id="headerUserName" class="text-sm font-medium">Usuário</span>
+
+      <button id="logoutButton" type="button" title="Sair" class="ml-1 hover:text-blue-200 transition-colors">
+        <i class="fas fa-right-from-bracket text-sm"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex flex-1 overflow-hidden">
+
+    <aside class="sidebar w-60 hidden md:flex flex-col shrink-0 overflow-y-auto">
+      <div class="px-5 pt-6 pb-3">
+        <p class="text-[10px] font-bold tracking-[.22em] uppercase text-slate-400">Menu</p>
+      </div>
+
+      <ul class="px-3 space-y-1">
+        <li>
+          <a href="#atividadeForm" id="menuGerar" class="nav-item active flex items-center gap-3 px-3 py-3 rounded-xl text-sm">
+            <i class="fas fa-file-alt w-4 text-center"></i>
+            Gerar Atividades
+          </a>
+        </li>
+
+        <li>
+          <a href="history.html" id="menuHistorico" class="nav-item flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600">
+            <i class="fas fa-history w-4 text-center"></i>
+            Histórico
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-bg flex-1 overflow-y-auto p-4 md:p-8 relative">
+      <div class="max-w-5xl mx-auto fade-in relative z-10">
+
+        <div class="mb-7">
+          <p class="section-label mb-1">Banco de questões</p>
+          <h1 class="font-display text-2xl font-bold text-gray-900">Gerador de Atividades</h1>
+          <p class="text-sm text-gray-500 mt-1">
+            Gere atividades automaticamente utilizando o banco de questões.
+          </p>
+        </div>
+
+        <div class="form-card p-6 md:p-8">
+          <h2 class="font-display text-base font-bold text-gray-800 pb-4 mb-6 border-b border-gray-100 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-brand-50 text-brand-500 grid place-items-center text-xs">
+              <i class="fas fa-plus"></i>
+            </span>
+            Cadastrar Atividade
+          </h2>
+
+          <form id="atividadeForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+              <div>
+                <label class="form-label" for="serie">
+                  Série <span class="text-red-400">*</span>
+                  <span class="normal-case font-normal text-gray-400"> · filtra por nível</span>
+                </label>
+
+                <div class="qfield px-3 py-2.5">
+                  <select id="serie" required class="w-full text-sm text-gray-800">
+                    <option value="">Selecione...</option>
+
+                    <optgroup label="Ensino Fundamental I">
+                      <option value="EF1">1º ano</option>
+                      <option value="EF2">2º ano</option>
+                      <option value="EF3">3º ano</option>
+                      <option value="EF4">4º ano</option>
+                      <option value="EF5">5º ano</option>
+                    </optgroup>
+
+                    <optgroup label="Ensino Fundamental II">
+                      <option value="EF6">6º ano</option>
+                      <option value="EF7">7º ano</option>
+                      <option value="EF8">8º ano</option>
+                      <option value="EF9">9º ano</option>
+                    </optgroup>
+
+                    <optgroup label="Ensino Médio">
+                      <option value="EM1">1º ano EM</option>
+                      <option value="EM2">2º ano EM</option>
+                      <option value="EM3">3º ano EM</option>
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label" for="disciplina">
+                  Disciplina <span class="text-red-400">*</span>
+                </label>
+
+                <div class="qfield disabled px-3 py-2.5">
+                  <select id="disciplina" required disabled class="w-full text-sm text-gray-500 cursor-not-allowed">
+                    <option value="">Escolha a série primeiro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label" for="tipo_usuario">
+                  Tipo de usuário
+                </label>
+
+                <div class="qfield px-3 py-2.5">
+                  <select id="tipo_usuario" class="w-full text-sm text-gray-800">
+                    <option value="">Selecione...</option>
+                    <option value="professor">Professor</option>
+                    <option value="usuario">Usuário</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="professorField" class="hidden">
+                <label class="form-label" for="professor">
+                  Professor responsável
+                </label>
+
+                <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                  <i class="fas fa-chalkboard-user text-gray-400 text-sm"></i>
+                  <input type="text" id="professor" placeholder="Nome do professor" class="w-full text-sm text-gray-800" />
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label" for="quantidade">
+                  Quantidade <span class="text-red-400">*</span>
+                </label>
+
+                <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                  <i class="fas fa-hashtag text-gray-400 text-sm"></i>
+                  <input type="number" id="quantidade" value="10" min="1" max="50" class="w-full text-sm text-gray-800" />
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label" for="dificuldade">
+                  Dificuldade
+                </label>
+
+                <div class="qfield px-3 py-2.5">
+                  <select id="dificuldade" class="w-full text-sm text-gray-800">
+                    <option value="">Todas</option>
+                    <option value="Fácil">Fácil</option>
+                    <option value="Médio">Médio</option>
+                    <option value="Difícil">Difícil</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label" for="tipo">
+                  Tipo
+                </label>
+
+                <div class="qfield px-3 py-2.5">
+                  <select id="tipo" class="w-full text-sm text-gray-800">
+                    <option value="">Todos</option>
+                    <option value="objetiva">Objetiva</option>
+                    <option value="discursiva">Discursiva</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="form-label" for="titulo">
+                  Título
+                </label>
+
+                <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                  <i class="fas fa-pen text-gray-400 text-sm"></i>
+                  <input type="text" id="titulo" value="Atividade" class="w-full text-sm text-gray-800" />
+                </div>
+              </div>
+
+              <div id="serieAviso" class="md:col-span-3 hidden">
+                <div class="flex items-center gap-2 bg-brand-50 border border-brand-100 text-brand-600 text-sm rounded-xl px-4 py-3">
+                  <i class="fas fa-info-circle shrink-0"></i>
+                  <span>Filtro de série ativo: a prévia vai buscar questões compatíveis com a série escolhida.</span>
+                </div>
+              </div>
+
+              <div class="md:col-span-3">
+                <div class="flex flex-col gap-3">
+                  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                      <label class="form-label mb-0">Conteúdos</label>
+                      <p id="conteudosResumo" class="text-xs text-gray-400 mt-1">
+                        Selecione uma disciplina para carregar os conteúdos.
+                      </p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      <button type="button" id="selecionarTodosConteudos" class="content-button" disabled>
+                        <i class="fas fa-check-double text-brand-500"></i>
+                        Todos
+                      </button>
+
+                      <button type="button" id="limparConteudos" class="content-button" disabled>
+                        <i class="fas fa-eraser text-gray-400"></i>
+                        Limpar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="qfield disabled flex items-center gap-2 px-3 py-2.5">
+                    <i class="fas fa-search text-gray-400 text-sm"></i>
+                    <input type="search" id="buscarConteudo" placeholder="Buscar conteúdo..." class="w-full text-sm text-gray-800 disabled:cursor-not-allowed" disabled />
+                  </div>
+
+                  <select id="conteudos" multiple class="hidden"></select>
+
+                  <div id="conteudosLista" class="conteudos-scroll min-h-[150px] max-h-[280px] overflow-y-auto rounded-xl border border-gray-100 bg-[#F8FAFF] p-3">
+                    <div class="h-[126px] flex flex-col items-center justify-center gap-2 text-gray-400">
+                      <i class="fas fa-book-open text-2xl opacity-30"></i>
+                      <span class="text-sm">Os conteúdos aparecerão aqui.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <ul class="px-3 space-y-1">
-                <li>
-                    <a href="#atividadeForm" id="menuGerar" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-50 text-blue-600 font-medium transition-colors border-l-4 border-blue-600">
-                        <i class="fas fa-file-alt w-5 text-center"></i> Gerar Atividades
-                    </a>
-                </li>
-                <li>
-                    <a href="history.html" id="menuHistorico" class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors">
-                        <i class="fas fa-history w-5 text-center"></i> Histórico
-                    </a>
-                </li>
-            </ul>
+
+            <div class="flex items-center gap-3 py-4 border-t border-gray-100">
+              <div class="relative">
+                <input type="checkbox" id="gabarito" class="peer w-5 h-5 rounded-md border-2 border-gray-300 text-brand-500 focus:ring-brand-400 focus:ring-2 cursor-pointer appearance-none checked:bg-brand-500 checked:border-brand-500 transition-all" />
+                <i class="fas fa-check absolute top-0.5 left-0.5 text-white text-[11px] pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"></i>
+              </div>
+
+              <label for="gabarito" class="text-sm font-medium text-gray-700 cursor-pointer select-none">
+                Incluir gabarito no final do documento
+              </label>
+            </div>
+
+            <div class="flex flex-col items-end">
+              <button type="submit" class="cta-btn w-full md:w-auto md:min-w-[280px] text-white font-bold py-3.5 px-8 flex justify-center items-center gap-2 text-sm">
+                <i class="fas fa-eye"></i>
+                PRÉ-VISUALIZAR AVALIAÇÃO
+              </button>
+            </div>
+
+            <div id="status" class="hidden mt-4 text-center text-sm font-semibold rounded-xl p-3"></div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="previewModal" class="fixed inset-0 z-[9999] hidden">
+    <div class="preview-shell">
+
+      <div class="preview-topbar">
+        <div class="preview-title-area">
+          <div class="preview-eyebrow">Revisão antes do PDF</div>
+          <h2 class="preview-heading">Prévia da avaliação</h2>
+          <p id="previewResumo" class="preview-subtitle">Revise as questões antes de gerar o PDF.</p>
+        </div>
+
+        <div class="preview-actions">
+          <button type="button" id="previewGerarPdf" class="preview-primary-action">
+            <i class="fas fa-file-pdf"></i>
+            <span>Gerar PDF</span>
+          </button>
+
+          <button type="button" id="previewFechar" class="preview-close-action" aria-label="Fechar prévia">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="preview-workspace">
+        <aside class="preview-sidebar">
+          <div id="previewStats" class="preview-stats"></div>
         </aside>
 
-        <main class="flex-1 overflow-y-auto p-4 md:p-8">
-            <div class="max-w-5xl mx-auto">
-                
-                <div class="mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900">Gerador de Atividades</h1>
-                    <p class="text-sm text-gray-500 mt-1">Gere atividades automaticamente utilizando o banco de questões.</p>
+        <section class="preview-scroll">
+          <div class="preview-paper">
+
+            <div class="preview-document-header">
+              <div class="preview-doc-title-row">
+                <div class="preview-doc-title-wrap">
+                  <div id="previewTitulo" class="preview-doc-title">ATIVIDADE</div>
+                  <div class="preview-yellow-line"></div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
-                    <h2 class="text-lg font-semibold text-gray-800 border-b border-gray-100 pb-4 mb-6">Cadastrar Atividade</h2>
-                    
-                    <form id="atividadeForm" class="space-y-6">
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            
-                            <!-- Série -->
-                            <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Série <span class="text-red-500">*</span>
-                                    <span class="ml-1 text-xs text-gray-400 font-normal">(filtra por nível)</span>
-                                </label>
-                                <select id="serie" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                                    <option value="">Selecione...</option>
-                                    <optgroup label="Ensino Fundamental I">
-                                        <option value="EF1">1º ano</option>
-                                        <option value="EF2">2º ano</option>
-                                        <option value="EF3">3º ano</option>
-                                        <option value="EF4">4º ano</option>
-                                        <option value="EF5">5º ano</option>
-                                    </optgroup>
-                                    <optgroup label="Ensino Fundamental II">
-                                        <option value="EF6">6º ano</option>
-                                        <option value="EF7">7º ano</option>
-                                        <option value="EF8">8º ano</option>
-                                        <option value="EF9">9º ano</option>
-                                    </optgroup>
-                                    <optgroup label="Ensino Médio">
-                                        <option value="EM1">1º ano EM</option>
-                                        <option value="EM2">2º ano EM</option>
-                                        <option value="EM3">3º ano EM</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-
-                            <!-- Disciplina -->
-                            <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Disciplina <span class="text-red-500">*</span></label>
-                                <select id="disciplina" required disabled class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
-                                    <option value="">Escolha a série primeiro</option>
-                                </select>
-                            </div>
-
-                            <!-- Tipo de usuário -->
-                            <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de usuário</label>
-                                <select id="tipo_usuario" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                                    <option value="">Selecione...</option>
-                                    <option value="professor">Professor</option>
-                                    <option value="usuario">Usuário</option>
-                                </select>
-                            </div>
-
-                            <!-- Professor responsável -->
-                            <div id="professorField" class="form-group hidden">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Professor responsável</label>
-                                <input type="text" id="professor" placeholder="Nome do professor" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                            </div>
-
-                            <!-- Quantidade -->
-                            <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Quantidade <span class="text-red-500">*</span></label>
-                                <input type="number" id="quantidade" value="10" min="1" max="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                            </div>
-
-                            <!-- Dificuldade -->
-                            <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Dificuldade</label>
-                                <select id="dificuldade" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                                    <option value="">Todas</option>
-                                    <option value="Fácil">Fácil</option>
-                                    <option value="Médio">Médio</option>
-                                    <option value="Difícil">Difícil</option>
-                                </select>
-                            </div>
-
-                            <!-- Tipo -->
-                            <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                                <select id="tipo" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                                    <option value="">Todos</option>
-                                    <option value="objetiva">Objetiva</option>
-                                    <option value="discursiva">Discursiva</option>
-                                </select>
-                            </div>
-
-                            <!-- Título -->
-                            <div class="form-group md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
-                                <input type="text" id="titulo" value="Atividade" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                            </div>
-
-                            <!-- Aviso de série selecionada -->
-                            <div id="serieAviso" class="md:col-span-3 hidden">
-                                <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg px-4 py-2.5">
-                                    <i class="fas fa-info-circle shrink-0"></i>
-                                    <span>
-                                        Filtro de série ativo: a prévia vai buscar questões compatíveis com a série escolhida.
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Conteúdos -->
-                            <div class="form-group md:col-span-3">
-                                <div class="flex flex-col gap-3">
-                                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Conteúdos</label>
-                                            <p id="conteudosResumo" class="text-xs text-gray-500 mt-1">Selecione uma disciplina para carregar os conteúdos.</p>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <button type="button" id="selecionarTodosConteudos" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                                <i class="fas fa-check-double text-blue-600"></i>
-                                                Todos
-                                            </button>
-                                            <button type="button" id="limparConteudos" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                                <i class="fas fa-eraser text-gray-500"></i>
-                                                Limpar
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="relative">
-                                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                                        <input type="search" id="buscarConteudo" placeholder="Buscar conteúdo..." class="w-full border border-gray-300 rounded-lg pl-9 pr-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed" disabled>
-                                    </div>
-
-                                    <select id="conteudos" multiple class="hidden"></select>
-
-                                    <div id="conteudosLista" class="conteudos-scroll min-h-[150px] max-h-[280px] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                        <div class="h-[126px] flex items-center justify-center text-sm text-gray-500">
-                                            <span>Os conteúdos aparecerão aqui.</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Gabarito -->
-                        <div class="flex items-center">
-                            <input type="checkbox" id="gabarito" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
-                            <label for="gabarito" class="ml-3 text-sm font-medium text-gray-700 cursor-pointer">Incluir gabarito no final do documento</label>
-                        </div>
-
-                        <!-- Botão -->
-                        <div class="pt-6 border-t border-gray-100 mt-6 flex flex-col items-end">
-                            <div class="flex gap-3">
-                                <button type="submit" class="w-full md:w-auto md:min-w-[260px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 px-6 rounded-lg shadow-sm transition-colors flex justify-center items-center gap-2 text-[15px]">
-                                    <i class="fas fa-eye"></i> PRÉ-VISUALIZAR AVALIAÇÃO
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="status" class="hidden mt-4 text-center text-sm font-semibold rounded-lg p-3"></div>
-
-                    </form>
+                <div class="preview-logo-box">
+                  <div class="preview-blue-divider"></div>
+                  <img src="/assets/logo_proposito.png" alt="Colégio Propósito" />
                 </div>
+              </div>
+
+              <div class="preview-info-grid first">
+                <div class="preview-info-field">
+                  <span>ALUNO(A)</span>
+                </div>
+
+                <div class="preview-info-field text-center">
+                  <span>DATA</span>
+                  <strong id="previewData"></strong>
+                </div>
+              </div>
+
+              <div class="preview-info-grid second">
+                <div class="preview-info-field text-center">
+                  <span>ANO/SÉRIE/CURSO</span>
+                  <strong id="previewSerie">5EFI</strong>
+                </div>
+
+                <div class="preview-info-field text-center">
+                  <span>TURNO</span>
+                  <div class="preview-turnos">
+                    <p><i></i> MANHÃ</p>
+                    <p><i></i> TARDE</p>
+                  </div>
+                </div>
+
+                <div class="preview-info-field text-center">
+                  <span>DISCIPLINA</span>
+                  <strong id="previewDisciplina"></strong>
+                </div>
+
+                <div class="preview-info-field text-center">
+                  <span>PROFESSOR(A)</span>
+                  <strong id="previewProfessor"></strong>
+                </div>
+              </div>
             </div>
-        </main>
+
+            <div id="previewQuestoes" class="preview-questions-list"></div>
+          </div>
+        </section>
+      </div>
     </div>
+  </div>
 
-    <div id="previewModal" class="fixed inset-0 z-[9999] hidden bg-slate-100 text-slate-900">
-        <div class="preview-shell h-full w-full flex flex-col bg-slate-100">
-            <div class="preview-topbar min-h-[76px] bg-white border-b border-slate-200 px-4 md:px-6 py-3 flex items-center justify-between gap-4 shrink-0 shadow-sm">
-                <div class="min-w-0">
-                    <div class="preview-eyebrow">Revisão antes do PDF</div>
-                    <h2 class="preview-heading">Prévia da avaliação</h2>
-                    <p id="previewResumo" class="preview-subtitle">Revise as questões antes de gerar o PDF.</p>
-                </div>
-                <div class="preview-actions">
-                    <button type="button" id="previewGerarPdf" class="preview-primary-action inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed">
-                        <i class="fas fa-file-pdf"></i>
-                        <span>Gerar PDF</span>
-                    </button>
-                    <button type="button" id="previewFechar" class="preview-close-action inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-slate-50" aria-label="Fechar prévia">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
+  <div id="trocaQuestaoModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/60 px-4 py-6">
+    <div class="h-full w-full flex items-center justify-center">
+      <div class="modal-card max-w-md">
+        <div class="modal-header">
+          <div>
+            <h2>Trocar questão</h2>
+            <p id="trocaQuestaoResumo">Escolha o tipo da nova questão.</p>
+          </div>
 
-            <div class="preview-workspace flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-4 lg:gap-6 p-4 lg:p-6">
-                <aside class="preview-sidebar min-h-0 overflow-y-auto">
-                    <div id="previewStats" class="preview-stats"></div>
-                </aside>
-
-                <section class="preview-scroll min-w-0 overflow-y-auto">
-                    <div class="preview-paper w-full max-w-[960px] min-h-full mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm p-5 md:p-7">
-                        <div class="preview-document-header">
-                            <div class="flex items-start justify-between gap-6">
-                                <div class="flex-1 min-w-0 pt-2">
-                                    <div id="previewTitulo" class="text-2xl text-[#183A7D] truncate">ATIVIDADE</div>
-                                    <div class="h-1.5 bg-[#F5C400] mt-3 w-full"></div>
-                                </div>
-                                <div class="hidden md:flex items-center gap-4 shrink-0 text-[#183A7D]">
-                                    <div class="h-[72px] border-l-2 border-[#183A7D]"></div>
-                                    <img src="/assets/logo_proposito.png" alt="Colégio Propósito" class="h-16 w-auto object-contain">
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-[1fr_160px] gap-2 mt-5 text-xs">
-                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px]">
-                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">ALUNO(A)</span>
-                                </div>
-                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px] text-center">
-                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">DATA</span>
-                                    <div id="previewData" class="font-bold text-slate-900 mt-1"></div>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-[1fr_145px_1fr_1.2fr] gap-2 mt-3 text-xs">
-                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px] text-center">
-                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">ANO/SÉRIE/CURSO</span>
-                                    <div id="previewSerie" class="font-bold text-slate-900 mt-1">5EFI</div>
-                                </div>
-                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px]">
-                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">TURNO</span>
-                                    <div class="flex items-center justify-center gap-3 mt-1 text-[#183A7D]">
-                                        <span><span class="inline-block w-3 h-3 rounded-full border border-[#183A7D] align-middle"></span> MANHÃ</span>
-                                        <span><span class="inline-block w-3 h-3 rounded-full border border-[#183A7D] align-middle"></span> TARDE</span>
-                                    </div>
-                                </div>
-                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px] text-center">
-                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">DISCIPLINA</span>
-                                    <div id="previewDisciplina" class="font-bold text-slate-900 mt-1"></div>
-                                </div>
-                                <div class="relative border border-[#35539A] rounded px-3 py-2 min-h-[40px] text-center">
-                                    <span class="absolute -top-2 left-3 bg-white px-1 font-bold text-[#183A7D]">PROFESSOR(A)</span>
-                                    <div id="previewProfessor" class="font-bold text-slate-900 mt-1"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="previewQuestoes" class="space-y-6"></div>
-                    </div>
-                </section>
-            </div>
+          <button type="button" id="trocaQuestaoFechar" class="modal-close">
+            <i class="fas fa-times text-sm"></i>
+          </button>
         </div>
-    </div>
 
-    <div id="trocaQuestaoModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/60 px-4 py-6">
-        <div class="h-full w-full flex items-center justify-center">
-            <div class="w-full max-w-md rounded-lg bg-white shadow-xl border border-slate-200">
-                <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-900">Trocar questão</h2>
-                        <p id="trocaQuestaoResumo" class="text-sm text-slate-500 mt-1">Escolha o tipo da nova questão.</p>
-                    </div>
-                    <button type="button" id="trocaQuestaoFechar" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+        <div class="p-5 space-y-3">
+          <button type="button" data-tipo="objetiva" class="troca-tipo modal-option blue">
+            <span>
+              <i class="fas fa-list-ul"></i>
+            </span>
+            <b>Objetiva <small>Questão com alternativas.</small></b>
+          </button>
 
-                <div class="p-5 space-y-3">
-                    <button type="button" data-tipo="objetiva" class="troca-tipo w-full flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-left hover:border-blue-300 hover:bg-blue-50">
-                        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
-                            <i class="fas fa-list-ul"></i>
-                        </span>
-                        <span>
-                            <span class="block font-bold text-slate-900">Objetiva</span>
-                            <span class="block text-sm text-slate-500">Questão com alternativas.</span>
-                        </span>
-                    </button>
+          <button type="button" data-tipo="discursiva" class="troca-tipo modal-option green">
+            <span>
+              <i class="fas fa-pen-to-square"></i>
+            </span>
+            <b>Discursiva <small>Questão com resposta escrita.</small></b>
+          </button>
 
-                    <button type="button" data-tipo="discursiva" class="troca-tipo w-full flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-left hover:border-blue-300 hover:bg-blue-50">
-                        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
-                            <i class="fas fa-pen-to-square"></i>
-                        </span>
-                        <span>
-                            <span class="block font-bold text-slate-900">Discursiva</span>
-                            <span class="block text-sm text-slate-500">Questão com resposta escrita.</span>
-                        </span>
-                    </button>
-
-                    <button type="button" id="trocaQuestaoCriar" class="w-full flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-left hover:bg-emerald-100">
-                        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-700">
-                            <i class="fas fa-plus"></i>
-                        </span>
-                        <span>
-                            <span class="block font-bold text-slate-900">Criar nova questão</span>
-                            <span class="block text-sm text-slate-500">Substitui esta questão na prévia.</span>
-                        </span>
-                    </button>
-                </div>
-            </div>
+          <button type="button" id="trocaQuestaoCriar" class="modal-option create">
+            <span>
+              <i class="fas fa-plus"></i>
+            </span>
+            <b>Criar nova questão <small>Substitui esta questão na prévia.</small></b>
+          </button>
         </div>
+      </div>
     </div>
+  </div>
 
-    <div id="novaQuestaoModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/60 px-4 py-6">
-        <div class="h-full w-full flex items-center justify-center">
-            <div class="w-full max-w-2xl max-h-full overflow-y-auto rounded-lg bg-white shadow-xl border border-slate-200">
-                <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-900">Criar questão</h2>
-                        <p id="novaQuestaoResumo" class="text-sm text-slate-500 mt-1">A questão será adicionada apenas nesta prévia.</p>
-                    </div>
-                    <button type="button" id="novaQuestaoFechar" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+  <div id="novaQuestaoModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/60 px-4 py-6">
+    <div class="h-full w-full flex items-center justify-center">
+      <div class="modal-card max-w-2xl max-h-full overflow-y-auto">
+        <div class="modal-header">
+          <div>
+            <h2>Criar questão</h2>
+            <p id="novaQuestaoResumo">A questão será adicionada apenas nesta prévia.</p>
+          </div>
 
-                <form id="novaQuestaoForm" class="p-5 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
-                            <select id="novaQuestaoTipo" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 bg-white text-sm">
-                                <option value="objetiva">Objetiva</option>
-                                <option value="discursiva">Discursiva</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Dificuldade</label>
-                            <select id="novaQuestaoDificuldade" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 bg-white text-sm">
-                                <option value="Manual">Manual</option>
-                                <option value="Fácil">Fácil</option>
-                                <option value="Médio">Médio</option>
-                                <option value="Difícil">Difícil</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Conteúdo</label>
-                            <input type="text" id="novaQuestaoConteudo" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="Opcional">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Enunciado</label>
-                        <textarea id="novaQuestaoEnunciado" rows="5" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm resize-y" required></textarea>
-                    </div>
-
-                    <div id="novaQuestaoAlternativas" class="space-y-3">
-                        <div class="flex items-center justify-between gap-3">
-                            <label class="block text-sm font-medium text-slate-700">Alternativas</label>
-                            <select id="novaQuestaoGabarito" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white">
-                                <option value="">Gabarito</option>
-                                <option value="A">A</option>
-                                <option value="B">B</option>
-                                <option value="C">C</option>
-                                <option value="D">D</option>
-                                <option value="E">E</option>
-                            </select>
-                        </div>
-                        <div class="grid grid-cols-1 gap-2">
-                            <input type="text" data-alternativa="A" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="A)">
-                            <input type="text" data-alternativa="B" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="B)">
-                            <input type="text" data-alternativa="C" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="C)">
-                            <input type="text" data-alternativa="D" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="D)">
-                            <input type="text" data-alternativa="E" class="nova-alternativa w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" placeholder="E)">
-                        </div>
-                    </div>
-
-                    <div id="novaQuestaoErro" class="hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
-
-                    <div class="flex justify-end gap-2 border-t border-slate-200 pt-4">
-                        <button type="button" id="novaQuestaoCancelar" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
-                            Cancelar
-                        </button>
-                        <button type="submit" id="novaQuestaoSalvar" class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-600">
-                            <i class="fas fa-plus"></i>
-                            Adicionar
-                        </button>
-                    </div>
-                </form>
-            </div>
+          <button type="button" id="novaQuestaoFechar" class="modal-close">
+            <i class="fas fa-times text-sm"></i>
+          </button>
         </div>
-    </div>
 
-    <div id="editarQuestaoModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/60 px-4 py-6">
-        <div class="h-full w-full flex items-center justify-center">
-            <div class="w-full max-w-2xl max-h-full overflow-y-auto rounded-lg bg-white shadow-xl border border-slate-200">
-                <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-900">Editar questão</h2>
-                        <p id="editarQuestaoResumo" class="text-sm text-slate-500 mt-1">A edição vale apenas para esta prévia.</p>
-                    </div>
-                    <button type="button" id="editarQuestaoFechar" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-
-                <form id="editarQuestaoForm" class="p-5 space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Enunciado</label>
-                        <textarea id="editarQuestaoEnunciado" rows="7" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm resize-y" required></textarea>
-                    </div>
-
-                    <div id="editarQuestaoLinhasGrupo" class="grid grid-cols-1 md:grid-cols-[1fr_140px] gap-3 items-end">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Linhas de resposta</label>
-                            <p class="text-xs text-slate-500">Use para aumentar ou reduzir o espaço da resposta discursiva no PDF.</p>
-                        </div>
-                        <input type="number" id="editarQuestaoLinhas" min="1" max="12" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" value="3">
-                    </div>
-
-                    <div id="editarQuestaoErro" class="hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
-
-                    <div class="flex justify-end gap-2 border-t border-slate-200 pt-4">
-                        <button type="button" id="editarQuestaoCancelar" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
-                            Cancelar
-                        </button>
-                        <button type="submit" id="editarQuestaoSalvar" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700">
-                            <i class="fas fa-save"></i>
-                            Salvar edição
-                        </button>
-                    </div>
-                </form>
+        <form id="novaQuestaoForm" class="p-5 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="form-label">Tipo</label>
+              <div class="qfield px-3 py-2.5">
+                <select id="novaQuestaoTipo" class="w-full text-sm text-gray-800">
+                  <option value="objetiva">Objetiva</option>
+                  <option value="discursiva">Discursiva</option>
+                </select>
+              </div>
             </div>
-        </div>
-    </div>
 
-    <script src="/static/js/app.js?v=preview-credit-fix-4"></script>
+            <div>
+              <label class="form-label">Dificuldade</label>
+              <div class="qfield px-3 py-2.5">
+                <select id="novaQuestaoDificuldade" class="w-full text-sm text-gray-800">
+                  <option value="Manual">Manual</option>
+                  <option value="Fácil">Fácil</option>
+                  <option value="Médio">Médio</option>
+                  <option value="Difícil">Difícil</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label">Conteúdo</label>
+              <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                <input type="text" id="novaQuestaoConteudo" class="w-full text-sm text-gray-800" placeholder="Opcional" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label">Enunciado</label>
+            <textarea id="novaQuestaoEnunciado" rows="5" class="qtextarea" required></textarea>
+          </div>
+
+          <div id="novaQuestaoAlternativas" class="space-y-3">
+            <div class="flex items-center justify-between gap-3">
+              <label class="form-label mb-0">Alternativas</label>
+
+              <div class="qfield px-3 py-1.5">
+                <select id="novaQuestaoGabarito" class="text-sm text-gray-800">
+                  <option value="">Gabarito</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                  <option value="E">E</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid gap-2">
+              <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                <span class="alternative-letter">A</span>
+                <input type="text" data-alternativa="A" class="nova-alternativa w-full text-sm text-gray-800" placeholder="Alternativa A" />
+              </div>
+
+              <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                <span class="alternative-letter">B</span>
+                <input type="text" data-alternativa="B" class="nova-alternativa w-full text-sm text-gray-800" placeholder="Alternativa B" />
+              </div>
+
+              <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                <span class="alternative-letter">C</span>
+                <input type="text" data-alternativa="C" class="nova-alternativa w-full text-sm text-gray-800" placeholder="Alternativa C" />
+              </div>
+
+              <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                <span class="alternative-letter">D</span>
+                <input type="text" data-alternativa="D" class="nova-alternativa w-full text-sm text-gray-800" placeholder="Alternativa D" />
+              </div>
+
+              <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                <span class="alternative-letter">E</span>
+                <input type="text" data-alternativa="E" class="nova-alternativa w-full text-sm text-gray-800" placeholder="Alternativa E" />
+              </div>
+            </div>
+          </div>
+
+          <div id="novaQuestaoErro" class="hidden rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600"></div>
+
+          <div class="modal-footer">
+            <button type="button" id="novaQuestaoCancelar" class="btn-secondary">
+              Cancelar
+            </button>
+
+            <button type="submit" id="novaQuestaoSalvar" class="btn-success">
+              <i class="fas fa-plus"></i>
+              Adicionar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="editarQuestaoModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/60 px-4 py-6">
+    <div class="h-full w-full flex items-center justify-center">
+      <div class="modal-card max-w-2xl max-h-full overflow-y-auto">
+        <div class="modal-header">
+          <div>
+            <h2>Editar questão</h2>
+            <p id="editarQuestaoResumo">A edição vale apenas para esta prévia.</p>
+          </div>
+
+          <button type="button" id="editarQuestaoFechar" class="modal-close">
+            <i class="fas fa-times text-sm"></i>
+          </button>
+        </div>
+
+        <form id="editarQuestaoForm" class="p-5 space-y-4">
+          <div>
+            <label class="form-label">Enunciado</label>
+            <textarea id="editarQuestaoEnunciado" rows="7" class="qtextarea" required></textarea>
+          </div>
+
+          <div id="editarQuestaoLinhasGrupo" class="grid grid-cols-1 md:grid-cols-[1fr_140px] gap-3 items-end">
+            <div>
+              <label class="form-label mb-1">Linhas de resposta</label>
+              <p class="text-xs text-slate-400">
+                Use para aumentar ou reduzir o espaço da resposta discursiva no PDF.
+              </p>
+            </div>
+
+            <div class="qfield flex items-center gap-2 px-3 py-2.5">
+              <input type="number" id="editarQuestaoLinhas" min="1" max="12" class="w-full text-sm text-gray-800" value="3" />
+            </div>
+          </div>
+
+          <div id="editarQuestaoErro" class="hidden rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600"></div>
+
+          <div class="modal-footer">
+            <button type="button" id="editarQuestaoCancelar" class="btn-secondary">
+              Cancelar
+            </button>
+
+            <button type="submit" id="editarQuestaoSalvar" class="btn-primary">
+              <i class="fas fa-save"></i>
+              Salvar edição
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js?v=preview-ui-3"></script>
 </body>
 </html>
-

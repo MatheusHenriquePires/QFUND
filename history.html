@@ -1,255 +1,554 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Histórico - QFund</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        /* keep scrollbar styles consistent */
-        select[multiple]::-webkit-scrollbar { width: 8px; }
-        select[multiple]::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
-        select[multiple]::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Histórico - QFund</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/css/app.css?v=history-ui-1" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#EEF3FF',
+              100: '#DCE7FF',
+              400: '#3D7BFF',
+              500: '#0B52E8',
+              600: '#0843C2',
+              700: '#063494'
+            }
+          },
+          fontFamily: {
+            display: ['Sora', 'sans-serif'],
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased h-screen flex flex-col overflow-hidden">
 
-    <header class="bg-[#0052cc] text-white h-16 flex items-center justify-between px-6 shadow-md z-20 shrink-0">
-        <div class="flex items-center gap-4">
-            <div class="text-2xl font-bold tracking-wide flex items-center gap-2">
-                <i class="fas fa-layer-group"></i> QFund
-            </div>
-        </div>
-        <div class="flex items-center gap-3 bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
-            <div class="w-8 h-8 rounded-full bg-white text-[#0052cc] flex items-center justify-center font-bold text-sm shadow-sm">
-                <span id="userInitial">U</span>
-            </div>
-            <span id="headerUserName" class="text-sm font-medium">Usuário</span>
-            <button id="logoutButton" type="button" title="Sair" class="ml-1 hover:text-blue-200"><i class="fas fa-right-from-bracket"></i></button>
-        </div>
-    </header>
+<body class="bg-[#F4F7FF] text-gray-800 antialiased h-screen flex flex-col overflow-hidden">
 
-    <div class="flex flex-1 overflow-hidden">
-        <aside class="w-64 bg-white border-r border-gray-200 md:flex flex-col shrink-0 overflow-y-auto shadow-[4px_0_10px_rgba(0,0,0,0.02)]">
-            <div class="p-5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu</div>
-            <li>
-                <a href="/app" class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors">
-                    <i class="fas fa-file-alt w-5 text-center"></i> Gerar Atividades
-                </a>
-            </li>
-            <li>
-                <a href="history.html" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-50 text-blue-600 font-medium transition-colors border-l-4 border-blue-600">
-                    <i class="fas fa-history w-5 text-center"></i> Histórico
-                </a>
-            </li>
-        </aside>
+  <header class="header-mesh text-white h-16 flex items-center justify-between px-6 z-20 shrink-0">
+    <div class="header-blob hb1"></div>
+    <div class="header-blob hb2"></div>
 
-        <main class="flex-1 overflow-y-auto p-6">
-            <div class="max-w-4xl mx-auto">
-                <h1 class="text-2xl font-bold mb-4">Histórico de Gerações</h1>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Tipo</label>
-                        <select id="tipoFiltro" class="w-full border rounded px-3 py-2">
-                            <option value="">Selecione...</option>
-                            <option value="professor">Professor</option>
-                            <option value="usuario">Usuário</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Professor (opcional)</label>
-                        <input id="profFiltro" class="w-full border rounded px-3 py-2" placeholder="Nome do professor" />
-                    </div>
-                    <div class="flex items-end">
-                        <button id="btnBuscar" class="bg-emerald-500 text-white px-4 py-2 rounded font-semibold">Buscar</button>
-                    </div>
-                </div>
-
-                <div id="status" class="hidden mb-4 p-3 rounded"></div>
-                <div id="resultados" class="space-y-4"></div>
-            </div>
-        </main>
+    <div class="relative z-10 font-display font-bold text-xl flex items-center gap-2.5">
+      <span class="w-8 h-8 rounded-xl bg-white/15 border border-white/25 grid place-items-center">
+        <i class="fas fa-layer-group text-sm"></i>
+      </span>
+      QFund
     </div>
 
-    <script>
-        const API = window.location.origin;
-        const CACHE_TTL = 1000 * 60 * 60;
-        const DISCIPLINAS_CACHE_KEY = 'disciplinas_cache';
-        const CONTEUDOS_CACHE_PREFIX = 'conteudos_cache_';
-        const btnBuscar = document.getElementById('btnBuscar');
-        const statusDiv = document.getElementById('status');
-        const resultadosDiv = document.getElementById('resultados');
-        const tipoFiltro = document.getElementById('tipoFiltro');
-        const profFiltro = document.getElementById('profFiltro');
+    <div class="relative z-10 flex items-center gap-3 bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
+      <div class="w-8 h-8 rounded-full bg-white text-brand-500 flex items-center justify-center font-bold text-sm shadow-sm">
+        <span id="userInitial">U</span>
+      </div>
 
-        async function loadProfile() {
-            try {
-                const res = await fetch(`${API}/usuario`);
-                if (res.status === 401) { window.location.href = '/'; return; }
-                if (!res.ok) return;
-                const profile = await res.json();
-                if (!profile) return;
-                document.getElementById('headerUserName').textContent = profile.nome || profile.email || 'Usuário';
-                document.getElementById('userInitial').textContent = (profile.nome || profile.email || 'U').trim().charAt(0).toUpperCase();
-                if (profile.tipo && tipoFiltro) tipoFiltro.value = profile.tipo;
-                if (profile.nome && profile.tipo === 'professor' && profFiltro) profFiltro.value = profile.nome;
-            } catch (e) {
-                console.error('Erro carregando perfil', e);
-            }
+      <span id="headerUserName" class="text-sm font-medium">Usuário</span>
+
+      <button id="logoutButton" type="button" title="Sair" class="ml-1 hover:text-blue-200 transition-colors">
+        <i class="fas fa-right-from-bracket text-sm"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex flex-1 overflow-hidden">
+
+    <aside class="sidebar w-60 hidden md:flex flex-col shrink-0 overflow-y-auto">
+      <div class="px-5 pt-6 pb-3">
+        <p class="text-[10px] font-bold tracking-[.22em] uppercase text-slate-400">Menu</p>
+      </div>
+
+      <ul class="px-3 space-y-1">
+        <li>
+          <a href="/app" class="nav-item flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600">
+            <i class="fas fa-file-alt w-4 text-center"></i>
+            Gerar Atividades
+          </a>
+        </li>
+
+        <li>
+          <a href="history.html" class="nav-item active flex items-center gap-3 px-3 py-3 rounded-xl text-sm">
+            <i class="fas fa-history w-4 text-center"></i>
+            Histórico
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-bg flex-1 overflow-y-auto p-4 md:p-8 relative">
+      <div class="max-w-6xl mx-auto fade-in relative z-10">
+
+        <div class="history-hero">
+          <div>
+            <p class="section-label mb-1">Registros gerados</p>
+            <h1 class="font-display text-2xl font-bold text-gray-900">Histórico de Gerações</h1>
+            <p class="text-sm text-gray-500 mt-1">
+              Consulte atividades geradas por tipo de usuário ou professor responsável.
+            </p>
+          </div>
+
+          <div class="history-hero-icon">
+            <i class="fas fa-clock-rotate-left"></i>
+          </div>
+        </div>
+
+        <section class="history-filter-card">
+          <div class="history-filter-header">
+            <div>
+              <h2>Filtros de busca</h2>
+              <p>Use pelo menos um filtro para carregar os PDFs gerados.</p>
+            </div>
+
+            <button id="btnLimpar" type="button" class="btn-secondary compact">
+              <i class="fas fa-eraser"></i>
+              Limpar
+            </button>
+          </div>
+
+          <div class="history-filter-grid">
+            <div>
+              <label class="form-label" for="tipoFiltro">Tipo</label>
+              <div class="qfield px-3 py-2.5">
+                <select id="tipoFiltro" class="w-full text-sm text-gray-800">
+                  <option value="">Selecione...</option>
+                  <option value="professor">Professor</option>
+                  <option value="usuario">Usuário</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label" for="profFiltro">Professor</label>
+              <div class="qfield flex items-center gap-2 px-3 py-2.5">
+                <i class="fas fa-chalkboard-user text-gray-400 text-sm"></i>
+                <input id="profFiltro" type="text" class="w-full text-sm text-gray-800" placeholder="Nome do professor" />
+              </div>
+            </div>
+
+            <div class="history-search-action">
+              <button id="btnBuscar" type="button" class="btn-success w-full">
+                <i class="fas fa-search"></i>
+                Buscar histórico
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div id="status" class="hidden history-status"></div>
+
+        <section class="history-results-section">
+          <div class="history-results-header">
+            <div>
+              <h2>Resultados</h2>
+              <p id="resultadosResumo">Nenhuma busca realizada ainda.</p>
+            </div>
+          </div>
+
+          <div id="resultados" class="history-results">
+            <div class="history-empty">
+              <div class="history-empty-icon">
+                <i class="fas fa-folder-open"></i>
+              </div>
+              <h3>Nenhum histórico carregado</h3>
+              <p>Selecione um tipo de usuário ou informe o nome do professor para buscar.</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API = window.location.origin;
+
+    const CACHE_TTL = 1000 * 60 * 60;
+    const DISCIPLINAS_CACHE_KEY = 'disciplinas_cache';
+    const CONTEUDOS_CACHE_PREFIX = 'conteudos_cache_';
+
+    const btnBuscar = document.getElementById('btnBuscar');
+    const btnLimpar = document.getElementById('btnLimpar');
+    const statusDiv = document.getElementById('status');
+    const resultadosDiv = document.getElementById('resultados');
+    const resultadosResumo = document.getElementById('resultadosResumo');
+    const tipoFiltro = document.getElementById('tipoFiltro');
+    const profFiltro = document.getElementById('profFiltro');
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function formatDateFromTimestamp(ts) {
+      if (!ts) return '-';
+
+      try {
+        return new Date(ts * 1000).toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (error) {
+        return '-';
+      }
+    }
+
+    function setButtonLoading(isLoading) {
+      btnBuscar.disabled = isLoading;
+
+      if (isLoading) {
+        btnBuscar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+        return;
+      }
+
+      btnBuscar.innerHTML = '<i class="fas fa-search"></i> Buscar histórico';
+    }
+
+    async function loadProfile() {
+      try {
+        const res = await fetch(`${API}/usuario`);
+
+        if (res.status === 401) {
+          window.location.href = '/';
+          return;
         }
 
-        function setStatus(msg, tipo) {
-            statusDiv.classList.remove('hidden', 'bg-blue-50','text-blue-700','bg-red-50','text-red-700','bg-green-50','text-green-700');
-            if (tipo === 'loading') statusDiv.classList.add('bg-blue-50','text-blue-700');
-            else if (tipo === 'error') statusDiv.classList.add('bg-red-50','text-red-700');
-            else if (tipo === 'success') statusDiv.classList.add('bg-green-50','text-green-700');
-            statusDiv.innerHTML = msg;
+        if (!res.ok) return;
+
+        const profile = await res.json();
+
+        if (!profile) return;
+
+        const userLabel = profile.nome || profile.email || 'Usuário';
+
+        document.getElementById('headerUserName').textContent = userLabel;
+        document.getElementById('userInitial').textContent = userLabel.trim().charAt(0).toUpperCase();
+
+        if (profile.tipo && tipoFiltro) {
+          tipoFiltro.value = profile.tipo;
         }
 
-        async function fetchDisciplinasMap() {
-            try {
-                const cached = localStorage.getItem(DISCIPLINAS_CACHE_KEY);
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (Date.now() - parsed.ts < CACHE_TTL) {
-                        const list = parsed.data || [];
-                        const map = {};
-                        list.forEach(d => map[d.id] = d.name || d.nome || d.title || d.titulo || d);
-                        return {list, map};
-                    }
-                }
+        if (profile.nome && profile.tipo === 'professor' && profFiltro) {
+          profFiltro.value = profile.nome;
+        }
+      } catch (error) {
+        console.error('Erro carregando perfil', error);
+      }
+    }
 
-                const res = await fetch(`${API}/disciplinas`);
-                if (!res.ok) return {list: [], map: {}};
-                const data = await res.json();
-                const list = data.data || data;
-                try {
-                    localStorage.setItem(DISCIPLINAS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: list }));
-                } catch (e) {}
-                const map = {};
-                list.forEach(d => map[d.id] = d.name || d.nome || d.title || d.titulo || d);
-                return {list, map};
-            } catch (e) {
-                console.error(e);
-                return {list: [], map: {}};
-            }
+    function setStatus(msg, tipo) {
+      statusDiv.className = 'history-status';
+
+      if (tipo === 'loading') {
+        statusDiv.classList.add('is-loading');
+      } else if (tipo === 'error') {
+        statusDiv.classList.add('is-error');
+      } else if (tipo === 'success') {
+        statusDiv.classList.add('is-success');
+      }
+
+      statusDiv.innerHTML = msg;
+      statusDiv.classList.remove('hidden');
+    }
+
+    function hideStatus() {
+      statusDiv.classList.add('hidden');
+      statusDiv.innerHTML = '';
+    }
+
+    function setEmptyState(title, message, icon = 'fa-folder-open') {
+      resultadosDiv.innerHTML = `
+        <div class="history-empty">
+          <div class="history-empty-icon">
+            <i class="fas ${icon}"></i>
+          </div>
+          <h3>${escapeHtml(title)}</h3>
+          <p>${escapeHtml(message)}</p>
+        </div>
+      `;
+    }
+
+    async function fetchDisciplinasMap() {
+      try {
+        const cached = localStorage.getItem(DISCIPLINAS_CACHE_KEY);
+
+        if (cached) {
+          const parsed = JSON.parse(cached);
+
+          if (Date.now() - parsed.ts < CACHE_TTL) {
+            const list = parsed.data || [];
+            const map = {};
+
+            list.forEach((d) => {
+              map[d.id] = d.name || d.nome || d.title || d.titulo || d;
+            });
+
+            return { list, map };
+          }
         }
 
-        async function fetchConteudosMap(disciplinaId) {
-            try {
-                const cacheKey = `${CONTEUDOS_CACHE_PREFIX}${disciplinaId}`;
-                const cached = localStorage.getItem(cacheKey);
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (Date.now() - parsed.ts < CACHE_TTL) {
-                        return criarConteudosMap(parsed.data || []);
-                    }
-                }
+        const res = await fetch(`${API}/disciplinas`);
 
-                const res = await fetch(`${API}/conteudos/${disciplinaId}`);
-                if (!res.ok) return {};
-                const data = await res.json();
-                try {
-                    localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
-                } catch (e) {}
-                return criarConteudosMap(data || []);
-            } catch (e) {
-                console.error(e);
-                return {};
-            }
-        }
+        if (!res.ok) return { list: [], map: {} };
 
-        function criarConteudosMap(items) {
-                const map = {};
-                const visitar = (lista) => {
-                    (lista || []).forEach(it => {
-                        map[it.id] = it.name || it.nome || it;
-                        visitar(it.subitens || it.children || []);
-                    });
-                };
-                visitar(items);
-                return map;
-        }
+        const data = await res.json();
+        const list = data.data || data;
 
-        btnBuscar.addEventListener('click', async () => {
-            const tipo = tipoFiltro.value;
-            const prof = profFiltro.value.trim();
+        try {
+          localStorage.setItem(DISCIPLINAS_CACHE_KEY, JSON.stringify({
+            ts: Date.now(),
+            data: list
+          }));
+        } catch (error) {}
 
-            if (!tipo && !prof) {
-                setStatus('Informe um tipo ou um professor para buscar.', 'error');
-                return;
-            }
+        const map = {};
 
-            setStatus('<i class="fas fa-spinner fa-spin"></i> Buscando...', 'loading');
-            resultadosDiv.innerHTML = '';
-
-            try {
-                let url;
-                if (prof) url = `${API}/historico/professor/${encodeURIComponent(prof)}`;
-                else url = `${API}/historico/tipo/${encodeURIComponent(tipo)}`;
-
-                const res = await fetch(url);
-                if (res.status === 401) { window.location.href = '/'; return; }
-                if (!res.ok) throw new Error('Erro ao buscar histórico');
-                const items = await res.json();
-
-                if (!items || items.length === 0) {
-                    resultadosDiv.innerHTML = '<div class="text-gray-600">Nenhum registro encontrado.</div>';
-                    setStatus('Nenhum registro encontrado.', 'success');
-                    return;
-                }
-
-                const {list: disciplinasList, map: disciplinasMap} = await fetchDisciplinasMap();
-
-                const disciplinasUnicas = Array.from(new Set(items.map(it => it.meta && it.meta.disciplina_id).filter(Boolean)));
-                const conteudosMapByDisc = {};
-                for (const d of disciplinasUnicas) {
-                    conteudosMapByDisc[d] = await fetchConteudosMap(d);
-                }
-
-                const html = items.map(it => {
-                    const ts = it.ts ? new Date(it.ts * 1000).toLocaleString() : '';
-                    const arquivo = it.arquivo;
-                    const titulo = (it.meta && it.meta.titulo) || 'Sem título';
-                    const disciplinaId = it.meta && it.meta.disciplina_id;
-                    const disciplinaNome = (disciplinasMap[disciplinaId] || disciplinaId) ;
-                    const conteudosIds = (it.meta && it.meta.conteudos) || [];
-                    const conteudosNomes = conteudosIds.map(cid => (conteudosMapByDisc[disciplinaId] && conteudosMapByDisc[disciplinaId][cid]) || cid).join(', ');
-                    const responsavel = it.responsavel || '-';
-                    const downloadUrl = `${API}/historico/download/${encodeURIComponent(arquivo)}`;
-
-                    return `
-                        <div class="p-4 bg-white rounded shadow-sm flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="text-lg font-semibold">${titulo}</div>
-                                <div class="text-sm text-gray-500">Disciplina: ${disciplinaNome}</div>
-                                <div class="text-sm text-gray-500">Conteúdos: ${conteudosNomes || '-'} </div>
-                                <div class="text-xs text-gray-400 mt-2">Gerado em: ${ts} • Responsável: ${responsavel}</div>
-                            </div>
-                            <div class="ml-4 flex flex-col gap-2">
-                                <a href="${downloadUrl}" target="_blank" class="bg-blue-600 text-white px-3 py-2 rounded">Baixar PDF</a>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                resultadosDiv.innerHTML = html;
-                setStatus('Resultados carregados.', 'success');
-
-            } catch (err) {
-                console.error(err);
-                setStatus('Erro ao carregar histórico.', 'error');
-            }
+        list.forEach((d) => {
+          map[d.id] = d.name || d.nome || d.title || d.titulo || d;
         });
 
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            await fetch(`${API}/auth/logout`, {method: 'POST'});
-            window.location.href = '/';
-        });
+        return { list, map };
+      } catch (error) {
+        console.error(error);
+        return { list: [], map: {} };
+      }
+    }
 
-        loadProfile();
-    </script>
-    </body>
-    </html>
+    async function fetchConteudosMap(disciplinaId) {
+      try {
+        const cacheKey = `${CONTEUDOS_CACHE_PREFIX}${disciplinaId}`;
+        const cached = localStorage.getItem(cacheKey);
+
+        if (cached) {
+          const parsed = JSON.parse(cached);
+
+          if (Date.now() - parsed.ts < CACHE_TTL) {
+            return criarConteudosMap(parsed.data || []);
+          }
+        }
+
+        const res = await fetch(`${API}/conteudos/${disciplinaId}`);
+
+        if (!res.ok) return {};
+
+        const data = await res.json();
+
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            ts: Date.now(),
+            data
+          }));
+        } catch (error) {}
+
+        return criarConteudosMap(data || []);
+      } catch (error) {
+        console.error(error);
+        return {};
+      }
+    }
+
+    function criarConteudosMap(items) {
+      const map = {};
+
+      const visitar = (lista) => {
+        (lista || []).forEach((it) => {
+          map[it.id] = it.name || it.nome || it.title || it.titulo || it;
+          visitar(it.subitens || it.children || []);
+        });
+      };
+
+      visitar(items);
+
+      return map;
+    }
+
+    function renderHistoryItems(items, disciplinasMap, conteudosMapByDisc) {
+      const html = items.map((it) => {
+        const ts = formatDateFromTimestamp(it.ts);
+        const arquivo = it.arquivo || '';
+        const titulo = (it.meta && it.meta.titulo) || 'Sem título';
+        const disciplinaId = it.meta && it.meta.disciplina_id;
+        const disciplinaNome = disciplinasMap[disciplinaId] || disciplinaId || '-';
+        const conteudosIds = (it.meta && it.meta.conteudos) || [];
+        const conteudosNomes = conteudosIds
+          .map((cid) => {
+            return (conteudosMapByDisc[disciplinaId] && conteudosMapByDisc[disciplinaId][cid]) || cid;
+          })
+          .filter(Boolean)
+          .join(', ');
+
+        const responsavel = it.responsavel || '-';
+        const tipo = (it.tipo || it.meta?.tipo_usuario || '').toString();
+        const quantidade = it.meta?.quantidade || it.quantidade || '-';
+        const downloadUrl = `${API}/historico/download/${encodeURIComponent(arquivo)}`;
+
+        return `
+          <article class="history-card">
+            <div class="history-card-main">
+              <div class="history-card-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+
+              <div class="history-card-content">
+                <div class="history-card-title-row">
+                  <h3>${escapeHtml(titulo)}</h3>
+                  ${tipo ? `<span class="history-pill">${escapeHtml(tipo)}</span>` : ''}
+                </div>
+
+                <div class="history-meta-grid">
+                  <div>
+                    <span>Disciplina</span>
+                    <strong>${escapeHtml(disciplinaNome)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Quantidade</span>
+                    <strong>${escapeHtml(quantidade)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Responsável</span>
+                    <strong>${escapeHtml(responsavel)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Gerado em</span>
+                    <strong>${escapeHtml(ts)}</strong>
+                  </div>
+                </div>
+
+                <div class="history-content-list">
+                  <span>Conteúdos:</span>
+                  <p>${escapeHtml(conteudosNomes || '-')}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="history-card-actions">
+              <a href="${downloadUrl}" target="_blank" rel="noopener noreferrer" class="history-download">
+                <i class="fas fa-download"></i>
+                Baixar PDF
+              </a>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      resultadosDiv.innerHTML = html;
+    }
+
+    async function buscarHistorico() {
+      const tipo = tipoFiltro.value;
+      const prof = profFiltro.value.trim();
+
+      if (!tipo && !prof) {
+        setStatus('<i class="fas fa-circle-exclamation"></i> Informe um tipo ou um professor para buscar.', 'error');
+        setEmptyState('Filtro obrigatório', 'Escolha um tipo ou informe o nome do professor.', 'fa-filter');
+        resultadosResumo.textContent = 'Busca não realizada.';
+        return;
+      }
+
+      setButtonLoading(true);
+      setStatus('<i class="fas fa-spinner fa-spin"></i> Buscando histórico...', 'loading');
+      resultadosResumo.textContent = 'Carregando registros...';
+      resultadosDiv.innerHTML = '';
+
+      try {
+        let url;
+
+        if (prof) {
+          url = `${API}/historico/professor/${encodeURIComponent(prof)}`;
+        } else {
+          url = `${API}/historico/tipo/${encodeURIComponent(tipo)}`;
+        }
+
+        const res = await fetch(url);
+
+        if (res.status === 401) {
+          window.location.href = '/';
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error('Erro ao buscar histórico');
+        }
+
+        const items = await res.json();
+
+        if (!items || items.length === 0) {
+          setEmptyState('Nenhum registro encontrado', 'Não existe geração registrada para os filtros informados.', 'fa-magnifying-glass');
+          setStatus('<i class="fas fa-circle-check"></i> Nenhum registro encontrado.', 'success');
+          resultadosResumo.textContent = '0 registros encontrados.';
+          return;
+        }
+
+        const { map: disciplinasMap } = await fetchDisciplinasMap();
+
+        const disciplinasUnicas = Array.from(
+          new Set(
+            items
+              .map((it) => it.meta && it.meta.disciplina_id)
+              .filter(Boolean)
+          )
+        );
+
+        const conteudosMapByDisc = {};
+
+        for (const disciplinaId of disciplinasUnicas) {
+          conteudosMapByDisc[disciplinaId] = await fetchConteudosMap(disciplinaId);
+        }
+
+        renderHistoryItems(items, disciplinasMap, conteudosMapByDisc);
+
+        setStatus(`<i class="fas fa-circle-check"></i> ${items.length} registro(s) carregado(s).`, 'success');
+        resultadosResumo.textContent = `${items.length} registro(s) encontrado(s).`;
+      } catch (error) {
+        console.error(error);
+
+        setStatus('<i class="fas fa-triangle-exclamation"></i> Erro ao carregar histórico.', 'error');
+        setEmptyState('Erro ao carregar', 'Verifique sua conexão ou tente novamente.', 'fa-triangle-exclamation');
+        resultadosResumo.textContent = 'Erro na busca.';
+      } finally {
+        setButtonLoading(false);
+      }
+    }
+
+    btnBuscar.addEventListener('click', buscarHistorico);
+
+    btnLimpar.addEventListener('click', () => {
+      tipoFiltro.value = '';
+      profFiltro.value = '';
+      hideStatus();
+      resultadosResumo.textContent = 'Nenhuma busca realizada ainda.';
+      setEmptyState('Nenhum histórico carregado', 'Selecione um tipo de usuário ou informe o nome do professor para buscar.');
+    });
+
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      await fetch(`${API}/auth/logout`, { method: 'POST' });
+      window.location.href = '/';
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>
